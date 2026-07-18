@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Shapem — The world's most advanced recipe discovery platform. AI-powered, beautifully designed." />
+  <title>Shapem — Discover the World's Recipes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/nav.css" />
+  <link rel="stylesheet" href="css/hero.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+  <link rel="stylesheet" href="css/cards.css" />
+  <link rel="stylesheet" href="css/search.css" />
+  <link rel="stylesheet" href="css/ai.css" />
+  <link rel="stylesheet" href="css/modal.css" />
+  <link rel="stylesheet" href="css/footer.css" />
+  <link rel="stylesheet" href="css/auth.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/community.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#home" class="nav-logo"><span class="logo-s">S</span>hapem</a>
+      <ul class="nav-links">
+        <li><a href="#home"     class="nav-link" data-page="home">Home</a></li>
+        <li><a href="#recipes"  class="nav-link" data-page="recipes">Recipes</a></li>
+        <li><a href="#cuisines" class="nav-link" data-page="home">Cuisines</a></li>
+        <li><a href="#ai-finder"class="nav-link" data-page="home">AI Chef</a></li>
+        <li><a href="#chefs"    class="nav-link" data-page="home">Chefs</a></li>
+        <li><a href="#community-page" class="nav-link" data-page="community" onclick="event.preventDefault();openCommunity()">Community</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="btn-search-nav" id="btnSearchNav" aria-label="Search"><i class="ti ti-search"></i></button>
+        <button class="btn-ghost" id="btnLogin">Sign In</button>
+        <button class="btn-gold"  id="btnSignup">Get Started</button>
+      </div>
+      <!-- User menu (shown when logged in) -->
+      <div id="userMenu">
+        <div class="user-avatar-btn" onclick="toggleUserDropdown()">
+          <div id="userMenuAvatar"></div>
+          <span id="userMenuName"></span>
+          <i class="ti ti-chevron-down" style="font-size:12px;color:var(--text-muted)"></i>
+        </div>
+        <div id="userDropdown">
+          <div class="user-drop-header">
+            <div class="user-drop-name"  id="dropName"></div>
+            <div class="user-drop-email" id="dropEmail"></div>
+          </div>
+          <button class="user-drop-item" onclick="closeUserDropdown();openDashboard('profile')"><i class="ti ti-user"></i> My Profile</button>
+          <button class="user-drop-item" onclick="closeUserDropdown();openDashboard('saved')"><i class="ti ti-bookmark"></i> Saved Recipes</button>
+          <button class="user-drop-item" onclick="closeUserDropdown();openDashboard('planner')"><i class="ti ti-calendar"></i> Meal Planner</button>
+          <button class="user-drop-item" onclick="closeUserDropdown();openDashboard('shopping')"><i class="ti ti-shopping-cart"></i> Shopping List</button>
+          <div class="user-drop-divider"></div>
+          <button class="user-drop-item danger" onclick="signOut()"><i class="ti ti-logout"></i> Sign Out</button>
+        </div>
+      </div>
+
+      <button class="nav-burger" id="navBurger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+    <div class="nav-mobile" id="navMobile">
+      <a href="#home"      data-page="home">Home</a>
+      <a href="#recipes"   data-page="recipes">Recipes</a>
+      <a href="#cuisines"  data-page="home">Cuisines</a>
+      <a href="#ai-finder" data-page="home">AI Chef</a>
+      <a href="#chefs"     data-page="home">Chefs</a>
+      <a href="#" onclick="event.preventDefault();openCommunity()">Community</a>
+      <a href="#" class="btn-gold" style="text-align:center">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- ═══════════ HOME PAGE ═══════════ -->
+  <div id="page-home">
+
+    <!-- HERO -->
+    <section class="hero" id="home">
+      <canvas id="heroCanvas"></canvas>
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <p class="hero-eyebrow">AI-Powered Recipe Discovery</p>
+        <h1 class="hero-title">The World's Finest<br /><em>Culinary Universe</em></h1>
+        <p class="hero-sub">Explore 50,000+ recipes from every corner of the globe. Let AI craft your perfect meal. Experience food in three dimensions.</p>
+        <div class="hero-cta">
+          <button class="btn-gold btn-lg" id="heroExplore">Explore Recipes</button>
+          <button class="btn-outline btn-lg" id="heroAI"><i class="ti ti-sparkles"></i> Ask AI Chef</button>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><span class="stat-num" data-target="50000">0</span><span class="stat-label">Recipes</span></div>
+          <div class="stat-divider"></div>
+          <div class="stat"><span class="stat-num" data-target="195">0</span><span class="stat-label">Countries</span></div>
+          <div class="stat-divider"></div>
+          <div class="stat"><span class="stat-num" data-target="2400">0</span><span class="stat-label">Chefs</span></div>
+          <div class="stat-divider"></div>
+          <div class="stat"><span class="stat-num" data-target="1200000">0</span><span class="stat-label">Cooks</span></div>
+        </div>
+      </div>
+      <div class="hero-scroll-hint"><span>Scroll to explore</span><i class="ti ti-chevron-down"></i></div>
+    </section>
+
+    <!-- SEARCH -->
+    <section class="search-strip" id="search-strip">
+      <div class="container">
+        <div class="search-bar-wrap">
+          <div class="search-bar" id="mainSearchBar">
+            <i class="ti ti-search search-icon"></i>
+            <input type="text" id="searchInput" placeholder="Search recipes, ingredients, cuisines…" autocomplete="off" />
+            <button class="search-voice" id="voiceBtn" aria-label="Voice search"><i class="ti ti-microphone"></i></button>
+            <button class="search-submit" id="searchSubmit">Search</button>
+          </div>
+          <div class="search-filters" id="searchFilters">
+            <button class="filter-chip active" data-filter="all">All</button>
+            <button class="filter-chip" data-filter="vegan">Vegan</button>
+            <button class="filter-chip" data-filter="keto">Keto</button>
+            <button class="filter-chip" data-filter="quick">Under 30 min</button>
+            <button class="filter-chip" data-filter="breakfast">Breakfast</button>
+            <button class="filter-chip" data-filter="dinner">Dinner</button>
+            <button class="filter-chip" data-filter="dessert">Dessert</button>
+          </div>
+          <div class="search-results-drop" id="searchDrop"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRENDING -->
+    <section class="section" id="trending">
+      <div class="container">
+        <div class="section-header">
+          <div><p class="section-eyebrow">Right Now</p><h2 class="section-title">Trending Recipes</h2></div>
+          <button class="btn-ghost-sm" onclick="showPage('recipes')">View all <i class="ti ti-arrow-right"></i></button>
+        </div>
+        <div class="recipe-grid" id="trendingGrid"></div>
+      </div>
+    </section>
+
+    <!-- WORLD CUISINES -->
+    <section class="section section-dark" id="cuisines">
+      <div class="container">
+        <div class="section-header">
+          <div><p class="section-eyebrow">Around the Globe</p><h2 class="section-title" style="color:var(--gold)">World Cuisines</h2></div>
+          <button class="btn-ghost-sm" style="color:var(--gold-light)" onclick="showPage('recipes')">Explore all <i class="ti ti-arrow-right"></i></button>
+        </div>
+        <div class="cuisine-grid" id="cuisineGrid"></div>
+      </div>
+    </section>
+
+    <!-- AI FINDER -->
+    <section class="section section-ai" id="ai-finder">
+      <div class="container">
+        <div class="ai-split">
+          <div class="ai-left">
+            <p class="section-eyebrow">Powered by GPT-4o</p>
+            <h2 class="section-title">Your Personal<br/><em>AI Chef</em></h2>
+            <p class="ai-desc">Tell the AI what you have, what you want, or how you feel — and it will craft the perfect recipe plan for you.</p>
+            <div class="ai-suggestions">
+              <span class="ai-suggest-label">Try asking:</span>
+              <button class="ai-chip" data-prompt="What can I cook with chicken, lemon, and rice?">🍋 Chicken, lemon & rice</button>
+              <button class="ai-chip" data-prompt="Give me a healthy keto dinner under 500 calories">💪 Keto dinner ideas</button>
+              <button class="ai-chip" data-prompt="Quick vegan breakfast ideas for busy mornings">🌱 Quick vegan breakfast</button>
+              <button class="ai-chip" data-prompt="Show me traditional Kenyan recipes">🇰🇪 Kenyan recipes</button>
+            </div>
+          </div>
+          <div class="ai-right">
+            <div class="ai-chat-panel" id="aiChatPanel">
+              <div class="ai-chat-header">
+                <div class="ai-avatar"><i class="ti ti-robot"></i></div>
+                <div><p class="ai-name">Shapem AI Chef</p><p class="ai-status"><span class="status-dot"></span> Online</p></div>
+              </div>
+              <div class="ai-messages" id="aiMessages">
+                <div class="ai-msg bot"><div class="msg-bubble">👋 Hello! I'm your personal AI chef. Ask me anything — ingredients you have, dietary goals, cuisine preferences, or meal planning. I'm here to help you cook something amazing.</div></div>
+              </div>
+              <div class="ai-input-row">
+                <input type="text" id="aiInput" placeholder="Ask the AI Chef…" autocomplete="off" />
+                <button id="aiSend" class="btn-gold"><i class="ti ti-send"></i></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CHEFS -->
+    <section class="section" id="chefs">
+      <div class="container">
+        <div class="section-header">
+          <div><p class="section-eyebrow">Master Creators</p><h2 class="section-title">Featured Chefs</h2></div>
+          <a href="#" class="btn-ghost-sm">Meet all chefs <i class="ti ti-arrow-right"></i></a>
+        </div>
+        <div class="chefs-grid" id="chefsGrid"></div>
+      </div>
+    </section>
+
+    <!-- SEASONAL -->
+    <section class="section section-warm" id="seasonal">
+      <div class="container">
+        <div class="section-header">
+          <div><p class="section-eyebrow">In Season Now</p><h2 class="section-title">Seasonal Dishes</h2></div>
+          <button class="btn-ghost-sm" onclick="showPage('recipes')">View all <i class="ti ti-arrow-right"></i></button>
+        </div>
+        <div class="seasonal-grid" id="seasonalGrid"></div>
+      </div>
+    </section>
+
+    <!-- COMMUNITY -->
+    <section class="section section-dark" id="community">
+      <div class="container">
+        <div class="community-split">
+          <div class="community-left">
+            <p class="section-eyebrow" style="color:var(--gold)">Join the Community</p>
+            <h2 class="section-title" style="color:#fff">Cook. Share.<br/><em style="color:var(--gold)">Earn Badges.</em></h2>
+            <p style="color:var(--text-muted);max-width:420px;line-height:1.7;margin-bottom:2rem;">Upload your recipes, challenge other cooks, earn achievements, and climb the global leaderboard.</p>
+            <button class="btn-gold btn-lg" onclick="openCommunity()"><i class="ti ti-users"></i> Join the Community</button>
+          </div>
+          <div class="community-right">
+            <div class="badges-showcase" id="badgesShowcase"></div>
+            <div class="leaderboard-mini" id="leaderboard"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /page-home -->
+
+  <!-- ═══════════ RECIPES PAGE ═══════════ -->
+  <div id="page-recipes" style="display:none; padding-top: var(--nav-h);">
+
+    <div style="background:var(--bg-dark); border-bottom:1px solid var(--border-dim); padding: 2rem 0 0;">
+      <div class="container">
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:1.5rem; flex-wrap:wrap;">
+          <button onclick="showPage('home')" style="color:var(--text-muted);font-size:13px;display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;">
+            <i class="ti ti-arrow-left"></i> Home
+          </button>
+          <h1 style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--text-primary);">
+            Recipes <span style="color:var(--gold)">by Country</span>
+          </h1>
+          <span id="recipesTotalCount" style="font-size:13px;color:var(--text-muted);margin-left:auto;"></span>
+        </div>
+
+        <!-- Recipes page search -->
+        <div class="search-bar-wrap" style="max-width:600px;margin-bottom:1.5rem;">
+          <div class="search-bar">
+            <i class="ti ti-search search-icon"></i>
+            <input type="text" id="recipesSearchInput" placeholder="Search all recipes…" autocomplete="off" />
+            <button class="search-submit" id="recipesSearchSubmit">Search</button>
+          </div>
+          <div class="search-results-drop" id="recipesSearchDrop"></div>
+        </div>
+
+        <!-- Country tab pills -->
+        <div id="countryTabs" style="display:flex;gap:8px;flex-wrap:wrap;padding-bottom:1rem;"></div>
+      </div>
+    </div>
+
+    <!-- Country recipe sections (dynamically built) -->
+    <div id="recipesPageContent" style="padding: 2rem 0 4rem;">
+      <div class="container" id="recipesContainer"></div>
+    </div>
+
+  </div><!-- /page-recipes -->
+
+  <!-- MODALS -->
+  <div class="modal-backdrop" id="recipeModal">
+    <div class="modal-panel" id="modalPanel">
+      <button class="modal-close" id="modalClose"><i class="ti ti-x"></i></button>
+      <div class="modal-content" id="modalContent"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="authModal">
+    <div class="modal-panel modal-sm" id="authPanel">
+      <button class="modal-close" id="authClose"><i class="ti ti-x"></i></button>
+      <div class="auth-content" id="authContent"></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="footer-logo"><span class="logo-s">S</span>hapem</div>
+          <p class="footer-tagline">The world's most advanced recipe discovery platform. Powered by AI, crafted with love.</p>
+          <div class="footer-social">
+            <a href="#" aria-label="Instagram"><i class="ti ti-brand-instagram"></i></a>
+            <a href="#" aria-label="Twitter"><i class="ti ti-brand-twitter"></i></a>
+            <a href="#" aria-label="YouTube"><i class="ti ti-brand-youtube"></i></a>
+            <a href="#" aria-label="TikTok"><i class="ti ti-brand-tiktok"></i></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Discover</h4>
+          <a href="#trending"  class="footer-nav" data-page="home">Trending Recipes</a>
+          <a href="#cuisines"  class="footer-nav" data-page="home">World Cuisines</a>
+          <a href="#ai-finder" class="footer-nav" data-page="home">AI Chef Assistant</a>
+          <a href="#seasonal"  class="footer-nav" data-page="home">Seasonal Dishes</a>
+          <a href="#chefs"     class="footer-nav" data-page="home">Chef Profiles</a>
+        </div>
+        <div class="footer-col">
+          <h4>Community</h4>
+          <a href="#" onclick="event.preventDefault();openCommunity();setTimeout(function(){openUploadModal();},300)">Upload a Recipe</a>
+          <a href="#" onclick="event.preventDefault();openCommunity();setTimeout(function(){switchCommunityTab('leaderboard');},300)">Leaderboard</a>
+          <a href="#" onclick="event.preventDefault();openCommunity();setTimeout(function(){switchCommunityTab('challenges');},300)">Challenges</a>
+          <a href="#community" class="footer-nav" data-page="home">Badges</a>
+          <a href="#" onclick="event.preventDefault();openCommunity()">Forums</a>
+        </div>
+        <div class="footer-col">
+          <h4>Account</h4>
+          <a href="#" onclick="event.preventDefault();openAuthModal('signup')">Sign Up Free</a>
+          <a href="#" onclick="event.preventDefault();openAuthModal('signup')">Premium Plan</a>
+          <a href="#" onclick="event.preventDefault();openCommunity();setTimeout(function(){switchCommunityTab('chefs');},300)">Chef Membership</a>
+          <a href="#" onclick="event.preventDefault();openDashboard('planner')">Meal Planner</a>
+          <a href="#" onclick="event.preventDefault();openDashboard('shopping')">Shopping List</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="#home" class="footer-nav" data-page="home">About Shapem</a>
+          <a href="#home" class="footer-nav" data-page="home">Blog</a>
+          <a href="#home" class="footer-nav" data-page="home">Careers</a>
+          <a href="#home" class="footer-nav" data-page="home">Press Kit</a>
+          <a href="#home" class="footer-nav" data-page="home">API Access</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Shapem Inc. All rights reserved.</p>
+        <div class="footer-legal"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Cookie Settings</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/supabase.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/hero3d.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/auth-ui.js"></script>
+  <script src="js/modal.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/community.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
