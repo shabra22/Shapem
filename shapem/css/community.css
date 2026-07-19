@@ -1,0 +1,358 @@
+/* ═══════════════════════════════════════════
+   SHAPEM — Community Page
+═══════════════════════════════════════════ */
+
+/* ── Community hero ─────────────────────── */
+.community-page-hero {
+  background: linear-gradient(135deg, #0A0A09 0%, #0D160F 50%, #0A0A09 100%);
+  border-bottom: 1px solid var(--border-dim);
+  padding: calc(var(--nav-h) + 3rem) 0 3rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.community-page-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(29,158,117,0.08) 0%, transparent 70%);
+}
+.community-page-hero .container { position: relative; }
+.community-hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+.community-hero-title em { color: var(--emerald); font-style: italic; }
+.community-hero-sub {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  max-width: 520px;
+  margin: 0 auto 2rem;
+  line-height: 1.7;
+}
+.community-hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.community-hero-stats {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-top: 2.5rem;
+  flex-wrap: wrap;
+}
+.community-hero-stat-num   { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; color: var(--emerald); }
+.community-hero-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+
+/* ── Community tabs ──────────────────────── */
+.community-tabs-bar {
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border-dim);
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 50;
+}
+.community-tabs {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.community-tabs::-webkit-scrollbar { display: none; }
+.community-tab {
+  padding: 14px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s;
+  background: none;
+  border-top: none; border-left: none; border-right: none;
+  font-family: inherit;
+  display: flex; align-items: center; gap: 6px;
+}
+.community-tab:hover { color: var(--text-primary); }
+.community-tab.active { color: var(--emerald); border-bottom-color: var(--emerald); }
+
+/* ── Feed layout ─────────────────────────── */
+.community-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 2rem;
+  padding: 2rem 0 4rem;
+  align-items: start;
+}
+
+/* ── Upload recipe card ──────────────────── */
+.upload-prompt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-xl);
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.upload-prompt:hover { border-color: var(--emerald); }
+.upload-prompt-avatar {
+  width: 40px; height: 40px;
+  border-radius: var(--r-full);
+  background: var(--bg-elevated);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 700; color: var(--gold);
+  flex-shrink: 0; overflow: hidden;
+}
+.upload-prompt-text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-full);
+  padding: 10px 16px;
+  cursor: pointer;
+}
+
+/* ── Community post card ─────────────────── */
+.community-post {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+  transition: border-color 0.3s;
+  animation: fadeUp 0.5s var(--ease-smooth) both;
+}
+.community-post:hover { border-color: var(--border-subtle); }
+
+.post-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 10px;
+}
+.post-avatar {
+  width: 40px; height: 40px;
+  border-radius: var(--r-full);
+  background: var(--bg-elevated);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; flex-shrink: 0; overflow: hidden;
+  border: 1px solid var(--border-dim);
+}
+.post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.post-author-name  { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.post-author-meta  { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.post-chef-badge   {
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  background: rgba(29,158,117,0.15); color: #4ECDA4;
+  border-radius: var(--r-full); letter-spacing: .04em;
+}
+.post-time { margin-left: auto; font-size: 12px; color: var(--text-hint); white-space: nowrap; }
+
+.post-body { padding: 0 16px 12px; }
+.post-text { font-size: 14px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 10px; }
+
+.post-recipe-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-md);
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  margin-bottom: 10px;
+}
+.post-recipe-card:hover { border-color: var(--gold); }
+.post-recipe-emoji { font-size: 2rem; flex-shrink: 0; }
+.post-recipe-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.post-recipe-meta  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+.post-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+
+.post-actions {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-dim);
+}
+.post-action-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--r-full);
+  font-size: 13px; font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  background: none; border: none; font-family: inherit;
+}
+.post-action-btn:hover { background: var(--bg-elevated); color: var(--text-primary); }
+.post-action-btn.liked { color: #F08060; }
+.post-action-btn i { font-size: 17px; }
+
+/* ── Challenge card ──────────────────────── */
+.challenge-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+  animation: fadeUp 0.5s var(--ease-smooth) both;
+}
+.challenge-header {
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(29,158,117,0.12), rgba(201,150,58,0.08));
+  border-bottom: 1px solid var(--border-dim);
+  display: flex; align-items: center; gap: 10px;
+}
+.challenge-icon { font-size: 2rem; }
+.challenge-title { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.challenge-meta  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.challenge-body  { padding: 14px 16px; }
+.challenge-desc  { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 12px; }
+.challenge-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-dim);
+}
+.challenge-entries { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+.challenge-prize   { font-size: 12px; font-weight: 700; color: var(--gold); }
+
+/* ── Sidebar widgets ─────────────────────── */
+.sidebar-widget {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+.sidebar-widget-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-dim);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex; align-items: center; gap: 8px;
+}
+.sidebar-widget-header i { color: var(--gold); font-size: 17px; }
+.sidebar-widget-body { padding: 12px; }
+
+/* Top chef mini row */
+.top-chef-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 4px;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.top-chef-row:hover { background: var(--bg-elevated); }
+.top-chef-avatar {
+  width: 36px; height: 36px;
+  border-radius: var(--r-full);
+  background: var(--bg-elevated);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; flex-shrink: 0;
+  border: 1px solid var(--border-gold);
+  overflow: hidden;
+}
+.top-chef-name  { flex: 1; font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.top-chef-score { font-size: 12px; font-weight: 700; color: var(--gold); font-family: var(--font-mono); }
+
+/* Upload modal */
+.upload-modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: rgba(0,0,0,0.85);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1rem;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
+.upload-modal-overlay.open { opacity: 1; pointer-events: all; }
+.upload-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-xl);
+  width: 100%; max-width: 600px;
+  max-height: 90vh; overflow-y: auto;
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.3s var(--ease-smooth);
+  box-shadow: var(--shadow-lift);
+}
+.upload-modal-overlay.open .upload-modal { transform: translateY(0) scale(1); }
+.upload-modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-dim);
+}
+.upload-modal-title { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+.upload-modal-body  { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.upload-step {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+  color: var(--text-muted); margin-bottom: 4px;
+}
+.upload-step-num {
+  width: 22px; height: 22px;
+  border-radius: var(--r-full);
+  background: var(--gold-glow);
+  border: 1px solid var(--border-gold);
+  color: var(--gold);
+  font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* Chef profile page */
+.chef-profile-page { padding-top: var(--nav-h); }
+.chef-profile-hero {
+  background: var(--bg-dark);
+  border-bottom: 1px solid var(--border-dim);
+  padding: 2.5rem 0;
+}
+.chef-profile-inner {
+  display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;
+}
+.chef-profile-photo {
+  width: 100px; height: 100px;
+  border-radius: var(--r-full);
+  border: 2px solid var(--border-gold);
+  background: var(--bg-elevated);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem; flex-shrink: 0; overflow: hidden;
+}
+.chef-profile-name   { font-family: var(--font-display); font-size: 1.8rem; font-weight: 900; color: var(--text-primary); }
+.chef-profile-origin { font-size: 13px; color: var(--text-muted); margin: 4px 0 10px; display: flex; align-items: center; gap: 6px; }
+.chef-profile-stats  { display: flex; gap: 2rem; flex-wrap: wrap; margin-top: 1rem; }
+.chef-profile-actions { display: flex; gap: 10px; margin-top: 1rem; flex-wrap: wrap; }
+
+/* Join community CTA in profile */
+.join-community-cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(29,158,117,0.1), rgba(201,150,58,0.06));
+  border: 1px solid rgba(29,158,117,0.25);
+  border-radius: var(--r-lg);
+  margin-top: 1rem;
+}
+.join-community-cta i { font-size: 1.5rem; color: var(--emerald); }
+.join-community-cta-text { flex: 1; }
+.join-community-cta-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.join-community-cta-sub   { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+@media (max-width: 900px) {
+  .community-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .community-hero-stats { gap: 1.5rem; }
+  .post-actions { gap: 0; }
+  .post-action-btn { padding: 7px 10px; font-size: 12px; }
+}
