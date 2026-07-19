@@ -73,6 +73,16 @@ function openRecipeModal(recipe) {
         </div>`).join('')}
     </div>` : '';
 
+  const substitutionsHTML = (recipe.substitutions && recipe.substitutions.length) ? `
+    <div class="modal-section-title">Ingredient Substitutions</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      ${recipe.substitutions.map(s => `
+        <div style="padding:10px 12px;background:var(--bg-card);border:1px solid var(--border-dim);border-radius:var(--r-md)">
+          <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">Instead of ${s.original}</div>
+          <div style="font-size:13px;color:var(--text-secondary)">${s.alternative}</div>
+        </div>`).join('')}
+    </div>` : '';
+
   const servedWithHTML = recipe.servedWith ? `
     <div class="modal-section-title">Best Served With</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">
@@ -166,6 +176,7 @@ function openRecipeModal(recipe) {
         ${n.sodium ? `<div class="nutrition-item"><div class="nutrition-val">${n.sodium}mg</div><div class="nutrition-label">Sodium</div></div>` : ''}
       </div>
 
+      ${substitutionsHTML}
       ${servedWithHTML}
       ${healthHTML}
       ${culturalHTML}

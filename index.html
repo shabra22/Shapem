@@ -7,7 +7,7 @@
   <title>Shapem — Discover the World's Recipes</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" crossorigin rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -84,10 +84,10 @@
   <div id="page-home">
 
     <!-- HERO -->
-    <section class="hero" id="home">
+    <section class="hero" id="home" style="background:radial-gradient(ellipse 80% 60% at 50% 40%,#0D1A0F 0%,#0A0A09 100%)">
       <canvas id="heroCanvas"></canvas>
       <div class="hero-overlay"></div>
-      <div class="hero-content">
+      <div class="hero-content" style="opacity:1!important;visibility:visible!important;position:relative;z-index:2">
         <p class="hero-eyebrow">AI-Powered Recipe Discovery</p>
         <h1 class="hero-title">The World's Finest<br /><em>Culinary Universe</em></h1>
         <p class="hero-sub">Explore 50,000+ recipes from every corner of the globe. Let AI craft your perfect meal. Experience food in three dimensions.</p>

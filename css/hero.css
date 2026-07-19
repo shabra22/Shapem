@@ -164,3 +164,14 @@
   .stat-divider { display: none; }
   .hero-stats { gap: var(--space-lg); padding: var(--space-md); }
 }
+
+/* ── Force hero text visible on all browsers ── */
+.hero-title    { color: #F0EEE8 !important; }
+.hero-title em { color: #C9963A !important; }
+.hero-sub      { color: #B8B6AE !important; }
+.hero-eyebrow  { color: #E8B96A !important; background: rgba(201,150,58,0.15) !important; border-color: rgba(201,150,58,0.3) !important; }
+.stat-num      { color: #C9963A !important; }
+.stat-label    { color: #6B6A63 !important; }
+.hero-stats    { background: rgba(255,255,255,0.04) !important; border-color: rgba(255,255,255,0.10) !important; }
+.btn-gold      { background: #C9963A !important; color: #0A0A09 !important; }
+.btn-outline   { border-color: rgba(255,255,255,0.10) !important; color: #F0EEE8 !important; }
