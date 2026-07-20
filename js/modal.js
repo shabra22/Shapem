@@ -32,6 +32,17 @@ function openRecipeModal(recipe) {
           return '<span style="padding:3px 10px;background:rgba(83,74,183,0.12);border:1px solid rgba(83,74,183,0.25);border-radius:var(--r-full);font-size:11px;font-weight:600;color:#AFA9EC">Collection: ' + c + '</span>';
         }).join('') + '</div>' : '';
 
+  var variantHTML = recipe.variantOf ? (function() {
+    var master = RECIPES.find(function(r) { return r.id === recipe.variantOf; });
+    if (!master) return '';
+    return '<div onclick="closeRecipeModal();setTimeout(function(){openRecipeModal(master);},120)" ' +
+      'style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(201,150,58,0.06);' +
+      'border:1px solid var(--border-gold);border-radius:var(--r-md);cursor:pointer;margin-bottom:12px">' +
+      '<span style="font-size:1.6rem">' + master.emoji + '</span>' +
+      '<div><div style="font-size:12px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:.05em">Part of the ' + recipe.masterRecipe + ' series</div>' +
+      '<div style="font-size:13px;color:var(--text-secondary)">Based on: ' + master.title + ' → tap to view</div></div></div>';
+  })() : '';
+
   var metaHTML = (recipe.meta) ? (function() {
     var meta = recipe.meta;
     var items = [];
@@ -90,6 +101,52 @@ function openRecipeModal(recipe) {
         recipe.healthBenefits.map(function(h) {
           return '<div style="display:flex;gap:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--emerald)"><i class="ti ti-heart"></i></span>' + h + '</div>';
         }).join('') + '</div>' : '';
+
+  var relatedDishHTML = (function() {
+    if (!recipe.relatedDish) return '';
+    var rd = recipe.relatedDish;
+    var related = RECIPES.find(function(r) { return r.id === rd.id; });
+    if (!related) return '';
+    var el = document.createElement('div');
+    el.style.cssText = 'display:flex;gap:12px;align-items:flex-start;padding:14px 16px;background:rgba(29,158,117,0.06);border:1px solid rgba(29,158,117,0.2);border-radius:var(--r-md);margin-bottom:12px;cursor:pointer';
+    el.innerHTML = '<span style="font-size:2rem;flex-shrink:0">' + related.emoji + '</span>' +
+      '<div><div style="font-size:12px;font-weight:700;color:var(--emerald);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Related Dish: ' + related.title + '</div>' +
+      '<div style="font-size:13px;color:var(--text-secondary);line-height:1.6">' + rd.note + '</div></div>';
+    el.addEventListener('click', function() {
+      closeRecipeModal();
+      setTimeout(function() { openRecipeModal(related); }, 120);
+    });
+    return el.outerHTML;
+  })();
+
+  var heritageHTML = recipe.heritage ? (
+    '<div class="modal-section-title">Heritage & History</div>' +
+    '<div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:var(--r-lg);overflow:hidden;margin-bottom:8px">' +
+      '<div style="padding:14px 16px;border-bottom:1px solid var(--border-dim);background:rgba(201,150,58,0.05)">' +
+        '<div style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Origin</div>' +
+        '<div style="font-size:13px;color:var(--text-secondary)">' + recipe.heritage.origin + '</div>' +
+      '</div>' +
+      '<div style="padding:14px 16px;border-bottom:1px solid var(--border-dim)">' +
+        '<div style="font-size:13px;color:var(--text-secondary);line-height:1.7">' + recipe.heritage.history + '</div>' +
+      '</div>' +
+      (recipe.heritage.traditionalUtensils ? (
+        '<div style="padding:12px 16px;border-bottom:1px solid var(--border-dim)">' +
+          '<div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Traditional Utensils</div>' +
+          '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+            recipe.heritage.traditionalUtensils.map(function(u) {
+              return '<span style="padding:3px 10px;background:var(--bg-elevated);border:1px solid var(--border-dim);border-radius:var(--r-full);font-size:12px;color:var(--text-secondary)">' + u + '</span>';
+            }).join('') +
+          '</div>' +
+        '</div>'
+      ) : '') +
+      (recipe.heritage.modernEvolution ? (
+        '<div style="padding:14px 16px">' +
+          '<div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Modern Evolution</div>' +
+          '<div style="font-size:13px;color:var(--text-secondary);line-height:1.65">' + recipe.heritage.modernEvolution + '</div>' +
+        '</div>'
+      ) : '') +
+    '</div>'
+  ) : '';
 
   var spiceBlendHTML = recipe.spiceBlend ? (
     '<div class="modal-section-title">Spice Blend: ' + recipe.spiceBlend.name + '</div>' +
@@ -154,6 +211,7 @@ function openRecipeModal(recipe) {
   content.innerHTML =
     '<div class="modal-recipe-hero-placeholder">' + recipe.emoji + '</div>' +
     '<div class="modal-body">' +
+      variantHTML +
       collectionsHTML +
       metaHTML +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
@@ -191,6 +249,8 @@ function openRecipeModal(recipe) {
       healthHTML +
       culturalHTML +
       variationsHTML +
+      relatedDishHTML +
+      heritageHTML +
       spiceBlendHTML +
       techniquesHTML +
       storageHTML +
