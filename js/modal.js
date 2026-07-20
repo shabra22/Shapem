@@ -91,6 +91,27 @@ function openRecipeModal(recipe) {
           return '<div style="display:flex;gap:8px;font-size:13px;color:var(--text-secondary)"><span style="color:var(--emerald)"><i class="ti ti-heart"></i></span>' + h + '</div>';
         }).join('') + '</div>' : '';
 
+  var spiceBlendHTML = recipe.spiceBlend ? (
+    '<div class="modal-section-title">Spice Blend: ' + recipe.spiceBlend.name + '</div>' +
+    '<div style="background:var(--bg-card);border:1px solid var(--border-gold);border-radius:var(--r-md);padding:14px 16px;margin-bottom:10px">' +
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">' +
+        recipe.spiceBlend.components.map(function(c) {
+          return '<span style="padding:4px 10px;background:var(--gold-glow);border:1px solid var(--border-gold);border-radius:var(--r-full);font-size:12px;color:var(--gold-light)">' + c + '</span>';
+        }).join('') +
+      '</div>' +
+      '<p style="font-size:13px;color:var(--text-secondary);line-height:1.6">' + recipe.spiceBlend.method + '</p>' +
+    '</div>'
+  ) : '';
+
+  var techniquesHTML = (recipe.techniques && recipe.techniques.length) ? (
+    '<div class="modal-section-title">Techniques Used</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px">' +
+      recipe.techniques.map(function(t) {
+        return '<span style="padding:5px 12px;background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--r-full);font-size:12px;color:var(--text-secondary)"><i class="ti ti-school" style="color:var(--gold);font-size:13px"></i> ' + t + '</span>';
+      }).join('') +
+    '</div>'
+  ) : '';
+
   var storageHTML = recipe.storage
     ? '<div class="modal-section-title">Storage & Reheating</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
@@ -170,6 +191,8 @@ function openRecipeModal(recipe) {
       healthHTML +
       culturalHTML +
       variationsHTML +
+      spiceBlendHTML +
+      techniquesHTML +
       storageHTML +
       relatedHTML +
       '<div style="display:flex;gap:12px;margin-top:var(--space-xl);flex-wrap:wrap">' +
