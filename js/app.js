@@ -3,7 +3,26 @@
 ═══════════════════════════════════════════ */
 
 // ── Single source of truth for page routing ──
-const PAGES = ['page-home', 'page-recipes', 'page-dashboard', 'page-community', 'page-chef-profile', 'page-about'];
+const PAGES = ['page-home', 'page-recipes', 'page-dashboard', 'page-community', 'page-chef-profile', 'page-about', 'page-privacy', 'page-terms'];
+
+function showLegal(type) {
+  PAGES.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  var page = document.getElementById('page-' + type);
+  if (page) page.style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function closeLegalPage() {
+  PAGES.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  document.getElementById('page-home').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 function openAbout() {
   PAGES.forEach(function(id) {
@@ -139,6 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
   window.closeAuthModal   = closeAuthModal;
   window.showPage         = showPage;
   window.openAbout         = openAbout;
+  window.showLegal         = showLegal;
+  window.closeLegalPage    = closeLegalPage;
   window.formatNum        = formatNum;
   window.currentUser      = null;
 

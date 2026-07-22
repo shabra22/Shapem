@@ -26,6 +26,7 @@
   <link rel="stylesheet" href="css/dashboard.css" />
   <link rel="stylesheet" href="css/community.css" />
   <link rel="stylesheet" href="css/about.css" />
+  <link rel="stylesheet" href="css/legal.css" />
 </head>
 <body>
 
@@ -429,6 +430,363 @@
 
   </div><!-- /page-about -->
 
+
+  <!-- ═══════════ PRIVACY POLICY PAGE ═══════════ -->
+  <div id="page-privacy" class="legal-page">
+    <div class="legal-hero">
+      <div class="container">
+        <div class="legal-hero-badge"><i class="ti ti-shield-lock"></i> Legal</div>
+        <h1 class="legal-hero-title">Privacy Policy</h1>
+        <div class="legal-hero-meta">
+          <span><i class="ti ti-calendar"></i> Effective: July 1, 2026</span>
+          <span><i class="ti ti-refresh"></i> Last updated: July 2026</span>
+          <span><i class="ti ti-world"></i> Applies worldwide</span>
+        </div>
+        <div style="margin-top:1.5rem;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-ghost" onclick="closeLegalPage()"><i class="ti ti-arrow-left"></i> Back</button>
+          <button class="legal-tab-btn active" onclick="showLegal('privacy')">Privacy Policy</button>
+          <button class="legal-tab-btn" onclick="showLegal('terms')">Terms &amp; Conditions</button>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="legal-layout">
+        <!-- TOC -->
+        <div class="legal-toc">
+          <div class="legal-toc-title">Contents</div>
+          <a href="#priv-1">1. Information We Collect</a>
+          <a href="#priv-2">2. How We Use Your Information</a>
+          <a href="#priv-3">3. How We Share Your Information</a>
+          <a href="#priv-4">4. Cookies & Tracking</a>
+          <a href="#priv-5">5. Data Security</a>
+          <a href="#priv-6">6. Your Rights & Choices</a>
+          <a href="#priv-7">7. Data Retention</a>
+          <a href="#priv-8">8. Children's Privacy</a>
+          <a href="#priv-9">9. International Transfers</a>
+          <a href="#priv-10">10. Changes to This Policy</a>
+          <a href="#priv-11">11. Contact Us</a>
+        </div>
+        <!-- Body -->
+        <div class="legal-body">
+          <div class="legal-highlight">
+            At Shapem, we take your privacy seriously. This Privacy Policy explains how we collect, use, protect, and share your information when you use our platform and services. By using Shapem, you agree to the practices described in this policy.
+          </div>
+
+          <div class="legal-section" id="priv-1">
+            <div class="legal-section-num">Section 1</div>
+            <div class="legal-section-title">Information We Collect</div>
+            <p class="legal-text">We collect information in the following ways:</p>
+            <p class="legal-text"><strong style="color:var(--text-primary)">Information You Provide Directly:</strong></p>
+            <ul class="legal-list">
+              <li>Account registration details: name, email address, and password</li>
+              <li>Profile information: username, profile photo, bio, and dietary preferences</li>
+              <li>Content you create: recipes, reviews, comments, and photos you upload</li>
+              <li>Communications: messages you send to us or through our platform</li>
+              <li>Payment details: processed securely through third-party payment providers (we do not store card numbers)</li>
+            </ul>
+            <p class="legal-text"><strong style="color:var(--text-primary)">Information Collected Automatically:</strong></p>
+            <ul class="legal-list">
+              <li>Device information: browser type, operating system, device identifiers</li>
+              <li>Usage data: pages visited, features used, time spent, search queries</li>
+              <li>Location data: general location based on IP address (not precise GPS)</li>
+              <li>Cookies and similar tracking technologies</li>
+            </ul>
+            <p class="legal-text"><strong style="color:var(--text-primary)">Information from Third Parties:</strong></p>
+            <ul class="legal-list">
+              <li>When you sign in with Google or Apple, we receive your name, email address, and profile photo</li>
+              <li>Analytics partners may share aggregated usage insights</li>
+            </ul>
+          </div>
+
+          <div class="legal-section" id="priv-2">
+            <div class="legal-section-num">Section 2</div>
+            <div class="legal-section-title">How We Use Your Information</div>
+            <p class="legal-text">We use your information to:</p>
+            <ul class="legal-list">
+              <li>Create and manage your Shapem account</li>
+              <li>Provide personalised recipe recommendations and AI-powered features</li>
+              <li>Enable you to save recipes, create meal plans, and manage shopping lists</li>
+              <li>Process payments for Premium subscriptions and Chef Memberships</li>
+              <li>Send you service notifications, updates, and support communications</li>
+              <li>Improve and develop our platform, features, and AI systems</li>
+              <li>Detect and prevent fraud, abuse, and security threats</li>
+              <li>Comply with legal obligations and enforce our policies</li>
+              <li>Send you marketing communications (only with your consent, and you can opt out at any time)</li>
+            </ul>
+          </div>
+
+          <div class="legal-section" id="priv-3">
+            <div class="legal-section-num">Section 3</div>
+            <div class="legal-section-title">How We Share Your Information</div>
+            <p class="legal-text">We do not sell your personal data. We may share your information in the following limited circumstances:</p>
+            <ul class="legal-list">
+              <li><strong style="color:var(--text-primary)">Service Providers:</strong> We use trusted third-party services for hosting (Supabase), authentication (Google, Apple), payment processing, and analytics. These providers are contractually bound to protect your data.</li>
+              <li><strong style="color:var(--text-primary)">Public Content:</strong> Recipes, reviews, and profile information you choose to make public will be visible to other users and may appear in search results.</li>
+              <li><strong style="color:var(--text-primary)">Legal Requirements:</strong> We may disclose information if required by law, court order, or to protect the rights, safety, and property of Shapem and our users.</li>
+              <li><strong style="color:var(--text-primary)">Business Transfers:</strong> If Shapem is acquired or merges with another company, your information may be transferred as part of that transaction.</li>
+            </ul>
+          </div>
+
+          <div class="legal-section" id="priv-4">
+            <div class="legal-section-num">Section 4</div>
+            <div class="legal-section-title">Cookies &amp; Tracking Technologies</div>
+            <p class="legal-text">We use cookies and similar technologies to:</p>
+            <ul class="legal-list">
+              <li>Keep you signed in to your account</li>
+              <li>Remember your preferences and settings</li>
+              <li>Understand how you use our platform</li>
+              <li>Improve performance and personalisation</li>
+            </ul>
+            <p class="legal-text">You can control cookies through your browser settings. Disabling certain cookies may affect your ability to use some features of the platform.</p>
+          </div>
+
+          <div class="legal-section" id="priv-5">
+            <div class="legal-section-num">Section 5</div>
+            <div class="legal-section-title">Data Security</div>
+            <p class="legal-text">We take the security of your data seriously. We implement industry-standard measures including:</p>
+            <ul class="legal-list">
+              <li>Encryption of data in transit (TLS) and at rest</li>
+              <li>Secure authentication via Supabase with Row Level Security</li>
+              <li>Regular security reviews and vulnerability assessments</li>
+              <li>Limited access to personal data on a need-to-know basis</li>
+            </ul>
+            <p class="legal-text">While we take every reasonable precaution, no system is completely secure. We encourage you to use a strong, unique password and to contact us immediately if you suspect any unauthorised access to your account.</p>
+          </div>
+
+          <div class="legal-section" id="priv-6">
+            <div class="legal-section-num">Section 6</div>
+            <div class="legal-section-title">Your Rights &amp; Choices</div>
+            <p class="legal-text">Depending on your location, you may have the following rights regarding your personal data:</p>
+            <ul class="legal-list">
+              <li><strong style="color:var(--text-primary)">Access:</strong> Request a copy of the personal data we hold about you</li>
+              <li><strong style="color:var(--text-primary)">Correction:</strong> Update or correct inaccurate information in your profile settings</li>
+              <li><strong style="color:var(--text-primary)">Deletion:</strong> Request that we delete your account and associated data</li>
+              <li><strong style="color:var(--text-primary)">Portability:</strong> Request your data in a portable format</li>
+              <li><strong style="color:var(--text-primary)">Opt-out:</strong> Unsubscribe from marketing emails at any time using the link in any email</li>
+              <li><strong style="color:var(--text-primary)">Restriction:</strong> Request that we limit how we use your data in certain circumstances</li>
+            </ul>
+            <p class="legal-text">To exercise any of these rights, please contact us at privacy@shapem.com.</p>
+          </div>
+
+          <div class="legal-section" id="priv-7">
+            <div class="legal-section-num">Section 7</div>
+            <div class="legal-section-title">Data Retention</div>
+            <p class="legal-text">We retain your personal data for as long as your account is active or as needed to provide our services. When you delete your account, we will delete or anonymise your personal data within 30 days, except where we are required to retain it for legal, tax, or regulatory purposes.</p>
+          </div>
+
+          <div class="legal-section" id="priv-8">
+            <div class="legal-section-num">Section 8</div>
+            <div class="legal-section-title">Children's Privacy</div>
+            <p class="legal-text">Shapem is not directed at children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that we have collected data from a child under 13 without verifiable parental consent, we will delete it promptly. If you believe a child has provided us with personal information, please contact us immediately.</p>
+          </div>
+
+          <div class="legal-section" id="priv-9">
+            <div class="legal-section-num">Section 9</div>
+            <div class="legal-section-title">International Data Transfers</div>
+            <p class="legal-text">Shapem operates globally. Your information may be transferred to and processed in countries other than your own. We ensure that any such transfers comply with applicable data protection laws and that appropriate safeguards are in place to protect your data.</p>
+          </div>
+
+          <div class="legal-section" id="priv-10">
+            <div class="legal-section-num">Section 10</div>
+            <div class="legal-section-title">Changes to This Policy</div>
+            <p class="legal-text">We may update this Privacy Policy from time to time. When we make significant changes, we will notify you by email or through a prominent notice on the platform. Your continued use of Shapem after the changes take effect constitutes your acceptance of the updated policy.</p>
+          </div>
+
+          <div class="legal-section" id="priv-11">
+            <div class="legal-section-num">Section 11</div>
+            <div class="legal-section-title">Contact Us</div>
+            <p class="legal-text">If you have any questions about this Privacy Policy or how we handle your data, please contact us:</p>
+            <div class="legal-contact-card">
+              <h4>Shapem Privacy Team</h4>
+              <div class="legal-contact-row"><i class="ti ti-mail"></i> privacy@shapem.com</div>
+              <div class="legal-contact-row"><i class="ti ti-world"></i> shapem.netlify.app</div>
+              <div class="legal-contact-row"><i class="ti ti-building"></i> Shapem Inc.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ TERMS & CONDITIONS PAGE ═══════════ -->
+  <div id="page-terms" class="legal-page">
+    <div class="legal-hero">
+      <div class="container">
+        <div class="legal-hero-badge"><i class="ti ti-file-text"></i> Legal</div>
+        <h1 class="legal-hero-title">Terms &amp; Conditions</h1>
+        <div class="legal-hero-meta">
+          <span><i class="ti ti-calendar"></i> Effective: July 1, 2026</span>
+          <span><i class="ti ti-refresh"></i> Last updated: July 2026</span>
+          <span><i class="ti ti-world"></i> Applies worldwide</span>
+        </div>
+        <div style="margin-top:1.5rem;display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn-ghost" onclick="closeLegalPage()"><i class="ti ti-arrow-left"></i> Back</button>
+          <button class="legal-tab-btn" onclick="showLegal('privacy')">Privacy Policy</button>
+          <button class="legal-tab-btn active" onclick="showLegal('terms')">Terms &amp; Conditions</button>
+        </div>
+      </div>
+    </div>
+    <div class="container">
+      <div class="legal-layout">
+        <!-- TOC -->
+        <div class="legal-toc">
+          <div class="legal-toc-title">Contents</div>
+          <a href="#terms-1">1. Acceptance of Terms</a>
+          <a href="#terms-2">2. Use of the Platform</a>
+          <a href="#terms-3">3. Account Registration</a>
+          <a href="#terms-4">4. User Content</a>
+          <a href="#terms-5">5. Intellectual Property</a>
+          <a href="#terms-6">6. Premium Subscriptions</a>
+          <a href="#terms-7">7. Prohibited Conduct</a>
+          <a href="#terms-8">8. Disclaimer of Warranties</a>
+          <a href="#terms-9">9. Limitation of Liability</a>
+          <a href="#terms-10">10. Termination</a>
+          <a href="#terms-11">11. Governing Law</a>
+          <a href="#terms-12">12. Changes to Terms</a>
+          <a href="#terms-13">13. Contact Us</a>
+        </div>
+        <!-- Body -->
+        <div class="legal-body">
+          <div class="legal-highlight">
+            Please read these Terms and Conditions carefully before using Shapem. By accessing or using our platform, you agree to be bound by these terms. If you do not agree, please do not use our services.
+          </div>
+
+          <div class="legal-section" id="terms-1">
+            <div class="legal-section-num">Section 1</div>
+            <div class="legal-section-title">Acceptance of Terms</div>
+            <p class="legal-text">By creating an account or using any part of the Shapem platform — including browsing recipes, using the AI Chef, participating in the community, or accessing any features — you agree to these Terms and Conditions and our Privacy Policy. These terms form a legally binding agreement between you and Shapem Inc.</p>
+            <p class="legal-text">If you are using Shapem on behalf of an organisation, you represent that you have the authority to bind that organisation to these terms.</p>
+          </div>
+
+          <div class="legal-section" id="terms-2">
+            <div class="legal-section-num">Section 2</div>
+            <div class="legal-section-title">Use of the Platform</div>
+            <p class="legal-text">Shapem grants you a limited, non-exclusive, non-transferable licence to access and use the platform for personal, non-commercial purposes, subject to these terms.</p>
+            <p class="legal-text">You may use Shapem to:</p>
+            <ul class="legal-list">
+              <li>Discover, save, and share recipes from around the world</li>
+              <li>Use our AI Chef for recipe recommendations and meal planning</li>
+              <li>Create and manage your personal recipe collection</li>
+              <li>Participate in the Shapem community and challenges</li>
+              <li>Access features included in your subscription plan</li>
+            </ul>
+          </div>
+
+          <div class="legal-section" id="terms-3">
+            <div class="legal-section-num">Section 3</div>
+            <div class="legal-section-title">Account Registration</div>
+            <p class="legal-text">To access certain features, you must create an account. You agree to:</p>
+            <ul class="legal-list">
+              <li>Provide accurate, current, and complete information during registration</li>
+              <li>Keep your account credentials secure and not share your password</li>
+              <li>Notify us immediately of any unauthorised access to your account</li>
+              <li>Be responsible for all activity that occurs under your account</li>
+              <li>Not create multiple accounts to circumvent restrictions</li>
+            </ul>
+            <p class="legal-text">You must be at least 13 years old to create an account. By registering, you confirm that you meet this age requirement.</p>
+          </div>
+
+          <div class="legal-section" id="terms-4">
+            <div class="legal-section-num">Section 4</div>
+            <div class="legal-section-title">User Content</div>
+            <p class="legal-text">When you submit recipes, reviews, photos, or any other content to Shapem ("User Content"), you:</p>
+            <ul class="legal-list">
+              <li>Retain ownership of your original content</li>
+              <li>Grant Shapem a worldwide, royalty-free, non-exclusive licence to use, display, reproduce, and distribute your content within the platform</li>
+              <li>Confirm that your content does not infringe any third-party intellectual property rights</li>
+              <li>Confirm that your content complies with our Community Guidelines</li>
+            </ul>
+            <p class="legal-text">We reserve the right to remove any content that violates these terms, our Community Guidelines, or applicable law, without prior notice.</p>
+          </div>
+
+          <div class="legal-section" id="terms-5">
+            <div class="legal-section-num">Section 5</div>
+            <div class="legal-section-title">Intellectual Property</div>
+            <p class="legal-text">All content on the Shapem platform that is not User Content — including the design, logo, software, AI systems, text, graphics, and features — is owned by Shapem Inc. and protected by copyright, trademark, and other intellectual property laws.</p>
+            <p class="legal-text">You may not copy, reproduce, distribute, modify, or create derivative works from any Shapem content without our express written permission.</p>
+          </div>
+
+          <div class="legal-section" id="terms-6">
+            <div class="legal-section-num">Section 6</div>
+            <div class="legal-section-title">Premium Subscriptions &amp; Payments</div>
+            <p class="legal-text">Shapem offers free and paid subscription tiers. For paid plans:</p>
+            <ul class="legal-list">
+              <li>Subscriptions are billed monthly or annually as selected at purchase</li>
+              <li>Payments are processed securely through our payment provider</li>
+              <li>Subscriptions renew automatically unless cancelled before the renewal date</li>
+              <li>Refunds may be issued at our discretion within 7 days of initial purchase</li>
+              <li>We reserve the right to change pricing with 30 days notice to existing subscribers</li>
+            </ul>
+          </div>
+
+          <div class="legal-section" id="terms-7">
+            <div class="legal-section-num">Section 7</div>
+            <div class="legal-section-title">Prohibited Conduct</div>
+            <p class="legal-text">You agree not to:</p>
+            <ul class="legal-list">
+              <li>Post false, misleading, or harmful content</li>
+              <li>Harass, abuse, threaten, or discriminate against other users</li>
+              <li>Upload content that infringes copyright, trademarks, or other rights</li>
+              <li>Use the platform to spam, advertise without permission, or distribute malware</li>
+              <li>Attempt to reverse engineer, scrape, or extract data from our platform</li>
+              <li>Use automated tools or bots to access the platform without permission</li>
+              <li>Impersonate other users, chefs, or Shapem staff</li>
+              <li>Engage in any activity that disrupts or damages the platform</li>
+            </ul>
+            <p class="legal-text">Violations may result in immediate account suspension or permanent termination.</p>
+          </div>
+
+          <div class="legal-section" id="terms-8">
+            <div class="legal-section-num">Section 8</div>
+            <div class="legal-section-title">Disclaimer of Warranties</div>
+            <p class="legal-text">Shapem is provided "as is" and "as available" without warranties of any kind, express or implied. We do not warrant that the platform will be uninterrupted, error-free, or free of harmful components.</p>
+            <p class="legal-text">Recipe content on Shapem is provided for informational purposes only. We are not responsible for the outcome of recipes, dietary suitability, or any health effects. Always consult a qualified professional for dietary, medical, or nutritional advice.</p>
+          </div>
+
+          <div class="legal-section" id="terms-9">
+            <div class="legal-section-num">Section 9</div>
+            <div class="legal-section-title">Limitation of Liability</div>
+            <p class="legal-text">To the maximum extent permitted by law, Shapem and its directors, employees, and partners shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the platform, including loss of data, revenue, or goodwill.</p>
+            <p class="legal-text">Our total liability to you for any claim arising from these terms shall not exceed the amount you paid to Shapem in the 12 months preceding the claim.</p>
+          </div>
+
+          <div class="legal-section" id="terms-10">
+            <div class="legal-section-num">Section 10</div>
+            <div class="legal-section-title">Termination</div>
+            <p class="legal-text">You may delete your account at any time through your profile settings. We may suspend or terminate your account if you violate these terms, engage in harmful behaviour, or for any other reason at our discretion with reasonable notice where possible.</p>
+            <p class="legal-text">Upon termination, your right to use the platform ceases immediately. Sections that by their nature should survive termination — including intellectual property, disclaimer of warranties, and limitation of liability — shall continue to apply.</p>
+          </div>
+
+          <div class="legal-section" id="terms-11">
+            <div class="legal-section-num">Section 11</div>
+            <div class="legal-section-title">Governing Law</div>
+            <p class="legal-text">These Terms and Conditions are governed by and construed in accordance with applicable international law. Any disputes arising from these terms shall be resolved through good-faith negotiation, and if necessary, through binding arbitration or courts of competent jurisdiction.</p>
+          </div>
+
+          <div class="legal-section" id="terms-12">
+            <div class="legal-section-num">Section 12</div>
+            <div class="legal-section-title">Changes to These Terms</div>
+            <p class="legal-text">We may update these Terms and Conditions from time to time. We will notify you of significant changes via email or a prominent notice on the platform. Continued use of Shapem after changes take effect constitutes your acceptance of the updated terms.</p>
+          </div>
+
+          <div class="legal-section" id="terms-13">
+            <div class="legal-section-num">Section 13</div>
+            <div class="legal-section-title">Contact Us</div>
+            <p class="legal-text">If you have any questions about these Terms and Conditions, please contact us:</p>
+            <div class="legal-contact-card">
+              <h4>Shapem Legal Team</h4>
+              <div class="legal-contact-row"><i class="ti ti-mail"></i> legal@shapem.com</div>
+              <div class="legal-contact-row"><i class="ti ti-world"></i> shapem.netlify.app</div>
+              <div class="legal-contact-row"><i class="ti ti-building"></i> Shapem Inc.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
@@ -481,7 +839,7 @@
       </div>
       <div class="footer-bottom">
         <p>&copy; 2026 Shapem Inc. All rights reserved.</p>
-        <div class="footer-legal"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a><a href="#">Cookie Settings</a></div>
+        <div class="footer-legal"><a href="#" onclick="event.preventDefault();showLegal('privacy')">Privacy Policy</a><a href="#" onclick="event.preventDefault();showLegal('terms')">Terms of Service</a><a href="#" onclick="event.preventDefault();showLegal('privacy')">Cookie Settings</a></div>
       </div>
     </div>
   </footer>
