@@ -119,6 +119,19 @@ function openRecipeModal(recipe) {
     return el.outerHTML;
   })();
 
+  var regionalMapHTML = recipe.regionalMap ? (
+    '<div class="modal-section-title">Where It\'s From</div>' +
+    '<div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:var(--r-md);padding:14px 16px;margin-bottom:8px">' +
+      '<div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:10px">' + recipe.regionalMap.primaryRegion + '</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">' +
+        (recipe.regionalMap.popularCounties || []).map(function(c) {
+          return '<span style="padding:3px 10px;background:var(--bg-elevated);border:1px solid var(--border-dim);border-radius:var(--r-full);font-size:12px;color:var(--text-secondary)">' + c + '</span>';
+        }).join('') +
+      '</div>' +
+      (recipe.regionalMap.alsoCommonIn ? '<div style="font-size:12px;color:var(--text-muted);font-style:italic">' + recipe.regionalMap.alsoCommonIn + '</div>' : '') +
+    '</div>'
+  ) : '';
+
   var heritageHTML = recipe.heritage ? (
     '<div class="modal-section-title">Heritage & History</div>' +
     '<div style="background:var(--bg-card);border:1px solid var(--border-dim);border-radius:var(--r-lg);overflow:hidden;margin-bottom:8px">' +
@@ -250,6 +263,7 @@ function openRecipeModal(recipe) {
       culturalHTML +
       variationsHTML +
       relatedDishHTML +
+      regionalMapHTML +
       heritageHTML +
       spiceBlendHTML +
       techniquesHTML +

@@ -25,6 +25,7 @@
   <link rel="stylesheet" href="css/auth.css" />
   <link rel="stylesheet" href="css/dashboard.css" />
   <link rel="stylesheet" href="css/community.css" />
+  <link rel="stylesheet" href="css/about.css" />
 </head>
 <body>
 
@@ -42,6 +43,7 @@
         <li><a href="#ai-finder"class="nav-link" data-page="home">AI Chef</a></li>
         <li><a href="#chefs"    class="nav-link" data-page="home">Chefs</a></li>
         <li><a href="#community-page" class="nav-link" data-page="community" onclick="event.preventDefault();openCommunity()">Community</a></li>
+        <li><a href="#about" class="nav-link" data-page="about" onclick="event.preventDefault();openAbout()">About</a></li>
       </ul>
       <div class="nav-actions">
         <button class="btn-search-nav" id="btnSearchNav" aria-label="Search"><i class="ti ti-search"></i></button>
@@ -287,6 +289,146 @@
     </div>
   </div>
 
+
+  <!-- ═══════════ ABOUT PAGE ═══════════ -->
+  <div id="page-about">
+
+    <!-- Hero -->
+    <div class="about-hero">
+      <div class="container">
+        <img src="assets/shapem-logo.png" alt="Shapem" class="about-logo" />
+        <div class="about-hero-tagline">Technology · Innovation · Impact</div>
+        <h1 class="about-hero-title" style="margin-top:1.25rem">
+          Shaping <em>What's Next</em>
+        </h1>
+        <p class="about-hero-sub">
+          Shapem is a technology-driven company dedicated to building innovative digital solutions that make everyday life smarter, simpler, and more connected.
+        </p>
+        <button class="btn-ghost" onclick="openAbout();window.scrollTo({top:0});" style="margin-right:10px">
+          <i class="ti ti-arrow-left"></i> Back to Home
+        </button>
+        <button class="btn-gold" onclick="showPage('recipes')">
+          Explore Recipes <i class="ti ti-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="about-content">
+      <div class="container">
+
+        <!-- About section -->
+        <div class="about-section">
+          <p class="about-section-label">Who We Are</p>
+          <h2 class="about-section-title">About <em>Shapem</em></h2>
+          <p class="about-body">
+            Founded with a vision to shape the future through creativity and technology, Shapem develops products that empower individuals, businesses, and communities. From intelligent software and AI-powered applications to global digital platforms and lifestyle solutions, we are committed to creating meaningful experiences that solve real-world problems.
+          </p>
+          <p class="about-body">
+            One of our flagship initiatives is a global recipe platform that brings together cuisines from every corner of the world, making it easy for anyone to discover, learn, and share authentic recipes. But our ambition extends far beyond food. We are continuously expanding into emerging technologies, automation, artificial intelligence, financial technology, and other innovative digital services designed to improve how people live and work.
+          </p>
+          <p class="about-body">
+            At Shapem, innovation is driven by purpose. Every product we build is designed with simplicity, performance, and user experience at its core. We believe that technology should not only be powerful — it should be accessible, intuitive, and capable of creating opportunities for everyone.
+          </p>
+        </div>
+
+        <!-- Vision + Mission -->
+        <div class="vm-grid">
+          <div class="vm-card">
+            <span class="vm-icon">🌍</span>
+            <div class="vm-label">Our Vision</div>
+            <div class="vm-title">A Globally Recognised Technology Company</div>
+            <p class="vm-text">To become a globally recognized technology company that empowers people through innovation, intelligence, and transformative digital experiences.</p>
+          </div>
+          <div class="vm-card">
+            <span class="vm-icon">🎯</span>
+            <div class="vm-label">Our Mission</div>
+            <div class="vm-title">Technology That Solves Real Problems</div>
+            <p class="vm-text">To design and deliver innovative products and technologies that solve real-world challenges, inspire creativity, and improve everyday life for individuals and businesses around the world.</p>
+          </div>
+        </div>
+
+        <!-- Core Values -->
+        <div class="about-section">
+          <p class="about-section-label">What Drives Us</p>
+          <h2 class="about-section-title">Our Core <em>Values</em></h2>
+          <div class="values-grid">
+            <div class="value-card">
+              <span class="value-icon">💡</span>
+              <div class="value-name">Innovation</div>
+              <p class="value-desc">We embrace bold ideas and continuous improvement in everything we build.</p>
+            </div>
+            <div class="value-card">
+              <span class="value-icon">⭐</span>
+              <div class="value-name">Excellence</div>
+              <p class="value-desc">We strive for quality in every product, every feature, every experience.</p>
+            </div>
+            <div class="value-card">
+              <span class="value-icon">🤝</span>
+              <div class="value-name">Integrity</div>
+              <p class="value-desc">We build trust through honesty, transparency, and accountability.</p>
+            </div>
+            <div class="value-card">
+              <span class="value-icon">🧩</span>
+              <div class="value-name">Collaboration</div>
+              <p class="value-desc">Great ideas grow through teamwork and diverse perspectives.</p>
+            </div>
+            <div class="value-card">
+              <span class="value-icon">🚀</span>
+              <div class="value-name">Impact</div>
+              <p class="value-desc">We focus on creating technology that makes a meaningful difference in people's lives.</p>
+            </div>
+            <div class="value-card">
+              <span class="value-icon">🌐</span>
+              <div class="value-name">Global Mindset</div>
+              <p class="value-desc">We build solutions for people everywhere, across cultures and communities.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Products -->
+        <div class="about-section">
+          <p class="about-section-label">What We Build</p>
+          <h2 class="about-section-title">Our <em>Products</em></h2>
+          <div class="about-products">
+            <div class="product-card">
+              <span class="product-tag live"><i class="ti ti-circle-filled" style="font-size:8px"></i> Live</span>
+              <div class="product-name">Shapem Recipes</div>
+              <p class="product-desc">A global AI-powered recipe discovery platform bringing cuisines from 195 countries to one place.</p>
+            </div>
+            <div class="product-card">
+              <span class="product-tag soon">Coming Soon</span>
+              <div class="product-name">Shapem AI</div>
+              <p class="product-desc">Intelligent AI-powered tools and applications for individuals and businesses.</p>
+            </div>
+            <div class="product-card">
+              <span class="product-tag soon">Coming Soon</span>
+              <div class="product-name">Shapem FinTech</div>
+              <p class="product-desc">Innovative financial technology solutions making money management accessible and smart.</p>
+            </div>
+            <div class="product-card">
+              <span class="product-tag soon">Coming Soon</span>
+              <div class="product-name">Shapem Automation</div>
+              <p class="product-desc">Digital automation tools that save time and improve productivity for businesses.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Closing -->
+        <div class="about-closing">
+          <p class="about-closing-text">
+            Shapem isn't just building products —<br/>we're <em>shaping what's next.</em>
+          </p>
+          <button class="btn-gold btn-lg" onclick="openCommunity()">
+            <i class="ti ti-users"></i> Join the Shapem Community
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /page-about -->
+
   <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
@@ -330,7 +472,7 @@
         </div>
         <div class="footer-col">
           <h4>Company</h4>
-          <a href="#home" class="footer-nav" data-page="home">About Shapem</a>
+          <a href="#about" onclick="event.preventDefault();openAbout()">About Shapem</a>
           <a href="#home" class="footer-nav" data-page="home">Blog</a>
           <a href="#home" class="footer-nav" data-page="home">Careers</a>
           <a href="#home" class="footer-nav" data-page="home">Press Kit</a>

@@ -3,7 +3,20 @@
 ═══════════════════════════════════════════ */
 
 // ── Single source of truth for page routing ──
-const PAGES = ['page-home', 'page-recipes', 'page-dashboard', 'page-community', 'page-chef-profile'];
+const PAGES = ['page-home', 'page-recipes', 'page-dashboard', 'page-community', 'page-chef-profile', 'page-about'];
+
+function openAbout() {
+  PAGES.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  var about = document.getElementById('page-about');
+  if (about) about.style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.querySelectorAll('.nav-link').forEach(function(a) {
+    a.style.color = a.dataset.page === 'about' ? 'var(--gold)' : '';
+  });
+}
 
 function showPage(page) {
   // Hide every page
@@ -125,6 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.openAuthModal    = openAuthModal;
   window.closeAuthModal   = closeAuthModal;
   window.showPage         = showPage;
+  window.openAbout         = openAbout;
   window.formatNum        = formatNum;
   window.currentUser      = null;
 
@@ -180,6 +194,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (href === '#recipes' || page === 'recipes') {
         e.preventDefault();
         showPage('recipes');
+      } else if (page === 'about' || href === '#about') {
+        e.preventDefault();
+        openAbout();
       } else if (page === 'community' || href.includes('community')) {
         e.preventDefault();
         if (typeof openCommunity === 'function') openCommunity();
