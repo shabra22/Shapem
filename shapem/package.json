@@ -1,0 +1,12 @@
+{
+  "name": "shapem",
+  "version": "1.0.0",
+  "description": "Shapem — AI-powered global recipe discovery platform",
+  "scripts": {
+    "build": "node generate-recipes-json.js"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "private": true
+}

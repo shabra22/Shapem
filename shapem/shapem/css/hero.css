@@ -1,0 +1,177 @@
+/* ═══════════════════════════════════════════
+   SHAPEM — Hero Section
+═══════════════════════════════════════════ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, #0D1A0F 0%, #0A0A09 100%);
+}
+
+/* Force all hero text visible */
+.hero-content * {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+#heroCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 60%, transparent 0%, rgba(10,10,9,0.7) 100%);
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 780px;
+  padding: 120px 2rem 5rem;
+  opacity: 1 !important;
+  visibility: visible !important;
+  color: #F0EEE8;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: var(--gold-glow);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--r-full);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+  margin-bottom: var(--space-lg);
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.8rem, 7vw, 5.5rem);
+  font-weight: 900;
+  line-height: 1.05;
+  color: var(--text-primary);
+  margin-bottom: var(--space-lg);
+  text-shadow: 0 2px 40px rgba(0,0,0,0.5);
+}
+
+.hero-title em {
+  font-style: italic;
+  color: var(--gold);
+  display: block;
+}
+
+.hero-sub {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: var(--text-secondary);
+  line-height: 1.7;
+  max-width: 560px;
+  margin: 0 auto var(--space-xl);
+}
+
+.hero-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-2xl);
+  flex-wrap: wrap;
+}
+
+/* Stats row */
+.hero-stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xl);
+  padding: var(--space-lg) var(--space-xl);
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--r-xl);
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-num {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.stat-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--border-subtle);
+}
+
+/* Scroll hint */
+.hero-scroll-hint {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 1;
+}
+
+.hero-scroll-hint i {
+  font-size: 18px;
+  animation: fadeUp 0.5s var(--ease-smooth) infinite alternate;
+}
+
+@media (max-width: 600px) {
+  .stat-divider { display: none; }
+  .hero-stats { gap: var(--space-lg); padding: var(--space-md); }
+}
+
+/* ── Force hero text visible on all browsers ── */
+.hero-title    { color: #F0EEE8 !important; }
+.hero-title em { color: #C9963A !important; }
+.hero-sub      { color: #B8B6AE !important; }
+.hero-eyebrow  { color: #E8B96A !important; background: rgba(201,150,58,0.15) !important; border-color: rgba(201,150,58,0.3) !important; }
+.stat-num      { color: #C9963A !important; }
+.stat-label    { color: #6B6A63 !important; }
+.hero-stats    { background: rgba(255,255,255,0.04) !important; border-color: rgba(255,255,255,0.10) !important; }
+.btn-gold      { background: #C9963A !important; color: #0A0A09 !important; }
+.btn-outline   { border-color: rgba(255,255,255,0.10) !important; color: #F0EEE8 !important; }
