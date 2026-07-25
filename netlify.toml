@@ -1,0 +1,3 @@
+[build]
+publish = "shapem"
+command = "node shapem/generate-recipes-json.js"
