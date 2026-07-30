@@ -2,7 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <!-- Browser compatibility & error handler -->
+  <script>
+    // Catch JS errors to prevent blank page on older browsers
+    window.onerror = function(msg, src, line) {
+      console.warn('Shapem JS error:', msg, 'in', src, 'line', line);
+      return true; // Prevent error from propagating
+    };
+    // Optional chaining polyfill for very old browsers
+    if (typeof window.shapemReady === 'undefined') {
+      window.shapemReady = true;
+    }
+  </script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="google-site-verification" content="0M5kYePQdaA4YrktUtWZXD9GOqenZWuzCL1lGJZFS2Y" />
   <meta name="description" content="Shapem — The world's most advanced recipe discovery platform. AI-powered, beautifully designed." />
 
   <!-- Schema.org structured data -->

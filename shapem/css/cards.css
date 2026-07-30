@@ -282,3 +282,23 @@
 @media (max-width: 400px) {
   .recipe-grid { grid-template-columns: 1fr; }
 }
+
+
+/* ── Cards mobile fixes ─────────────────── */
+@media (max-width: 640px) {
+  .recipe-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  .recipe-card-title {
+    font-size: 13px;
+  }
+}
+@media (max-width: 400px) {
+  .recipe-grid {
+    grid-template-columns: 1fr;
+  }
+  .cuisine-card {
+    aspect-ratio: 4/3;
+  }
+}

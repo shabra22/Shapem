@@ -177,3 +177,30 @@
 @media (max-width: 500px) {
   .badges-showcase { grid-template-columns: repeat(2, 1fr); }
 }
+
+
+/* ── Sections mobile fixes ──────────────── */
+@media (max-width: 640px) {
+  .section-title {
+    font-size: clamp(1.4rem, 6vw, 2rem);
+    word-break: break-word;
+  }
+  .section { padding: 3rem 0; }
+  .section-dark { padding: 3rem 0; }
+  .section-warm { padding: 3rem 0; }
+  .chefs-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .cuisine-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 400px) {
+  .chefs-grid {
+    grid-template-columns: 1fr;
+  }
+  .cuisine-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

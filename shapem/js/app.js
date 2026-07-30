@@ -180,7 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
   observeSection('home',     animateCounters);
 
   // Hero buttons
-  document.getElementById('heroExplore')?.addEventListener('click', () => showPage('recipes'));
+  var heroExplore = document.getElementById('heroExplore');
+  if (heroExplore) heroExplore.addEventListener('click', function() { showPage('recipes'); });
   var heroAIBtn = document.getElementById('heroAI');
   if (heroAIBtn) {
     heroAIBtn.addEventListener('click', function() {

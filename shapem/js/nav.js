@@ -31,10 +31,12 @@ function initNav() {
   }
 
   // Sign In / Sign Up buttons
-  document.getElementById('btnLogin')?.addEventListener('click', function() {
+  var btnLogin = document.getElementById('btnLogin');
+  if (btnLogin) btnLogin.addEventListener('click', function() {
     openAuthModal('login');
   });
-  document.getElementById('btnSignup')?.addEventListener('click', function() {
+  var btnSignup = document.getElementById('btnSignup');
+  if (btnSignup) btnSignup.addEventListener('click', function() {
     openAuthModal('signup');
   });
 }

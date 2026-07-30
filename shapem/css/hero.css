@@ -175,3 +175,48 @@
 .hero-stats    { background: rgba(255,255,255,0.04) !important; border-color: rgba(255,255,255,0.10) !important; }
 .btn-gold      { background: #C9963A !important; color: #0A0A09 !important; }
 .btn-outline   { border-color: rgba(255,255,255,0.10) !important; color: #F0EEE8 !important; }
+
+
+/* ── Hero mobile fixes ──────────────────── */
+@media (max-width: 768px) {
+  .hero-content {
+    padding: 100px 1.5rem 3rem;
+    width: 100%;
+  }
+  .hero-title {
+    font-size: clamp(1.8rem, 8vw, 2.8rem);
+    word-break: break-word;
+  }
+  .hero-sub {
+    font-size: 0.95rem;
+    padding: 0;
+  }
+  .hero-cta {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-cta .btn-gold,
+  .hero-cta .btn-outline {
+    width: 100%;
+    max-width: 280px;
+    justify-content: center;
+  }
+  .hero-stats {
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem;
+  }
+}
+@media (max-width: 480px) {
+  .hero-content {
+    padding: 90px 1rem 2.5rem;
+  }
+  .hero-title {
+    font-size: clamp(1.6rem, 7vw, 2rem);
+  }
+  .hero-stats {
+    gap: 0.75rem;
+  }
+  .stat-num { font-size: 1.4rem; }
+}

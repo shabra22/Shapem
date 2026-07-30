@@ -241,3 +241,31 @@
   .nutrition-grid    { grid-template-columns: repeat(2,1fr); }
   .modal-recipe-title{ font-size: 1.4rem; }
 }
+
+
+/* ── Modal mobile fixes ─────────────────── */
+@media (max-width: 640px) {
+  .modal-panel {
+    max-height: 100dvh;
+    border-radius: var(--r-lg) var(--r-lg) 0 0;
+    margin-top: auto;
+  }
+  .modal-recipe-meta {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .modal-meta-item {
+    font-size: 11px;
+  }
+  .nutrition-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+@media (max-width: 400px) {
+  .modal-body {
+    padding: 1rem;
+  }
+  .modal-recipe-title {
+    font-size: 1.3rem;
+  }
+}

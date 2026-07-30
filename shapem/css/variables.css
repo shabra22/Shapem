@@ -65,3 +65,19 @@
   --max-w:    1240px;
   --col-gap:  24px;
 }
+
+
+/* ── Mobile variable overrides ─────────── */
+@media (max-width: 640px) {
+  :root {
+    --col-gap: 16px;
+    --space-xl: 1.5rem;
+    --space-2xl: 2rem;
+    --space-3xl: 3rem;
+  }
+}
+@media (max-width: 400px) {
+  :root {
+    --col-gap: 12px;
+  }
+}
