@@ -1,3 +1,4 @@
 [build]
-publish = "shapem"
-command = "node shapem/generate-recipes-json.js"
+  base    = "gieeskrecipes-website"
+  command = "npm run build"
+  publish = "gieeskrecipes-website"
