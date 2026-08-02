@@ -19,9 +19,21 @@
   color: var(--text-primary);
   margin-bottom: 1.25rem;
   text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .auth-brand .logo-s { color: var(--gold); font-style: italic; }
-.auth-logo { height: 52px; width: auto; object-fit: contain; }
+.auth-logo {
+  height: 88px;
+  width: 88px;
+  object-fit: contain;
+  border-radius: 16px;
+  background: #111;
+  padding: 6px;
+  box-shadow: 0 0 0 1.5px rgba(255,255,255,0.08), 0 4px 18px rgba(0,0,0,0.45);
+  display: block;
+}
 
 .auth-title {
   font-family: var(--font-display);
