@@ -21,6 +21,7 @@
   text-align: center;
 }
 .auth-brand .logo-s { color: var(--gold); font-style: italic; }
+.auth-logo { height: 52px; width: auto; object-fit: contain; }
 
 .auth-title {
   font-family: var(--font-display);
