@@ -17,7 +17,7 @@
   font-size: 1.6rem;
   font-weight: 900;
   color: var(--text-primary);
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
   text-align: center;
   display: flex;
   justify-content: center;
@@ -26,12 +26,14 @@
 .auth-brand .logo-s { color: var(--gold); font-style: italic; }
 .auth-logo {
   width: 100%;
-  max-width: 340px;
-  height: 100px;
-  object-fit: contain;
-  object-position: center;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1156 / 374;
+  object-fit: fill;
   display: block;
-  filter: drop-shadow(0 2px 16px rgba(0,0,0,0.5));
+  filter:
+    drop-shadow(0 3px 10px rgba(0,0,0,0.6))
+    drop-shadow(0 0 30px rgba(212,160,74,0.16));
 }
 
 .auth-title {
