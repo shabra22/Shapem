@@ -170,14 +170,29 @@ document.addEventListener('DOMContentLoaded', () => {
   initAI();
   initModals();
 
-  // Home page initial renders
-  renderTrending();
-  renderCuisines();
-  renderBadges();
-  renderLeaderboard();
-  observeSection('chefs',    renderChefs);
-  observeSection('seasonal', renderSeasonal);
-  observeSection('home',     animateCounters);
+  // Home page initial renders — these need the recipe catalogue, so they
+  // wait for the index fetch. Everything above renders immediately.
+  function renderDataViews() {
+    renderTrending();
+    renderCuisines();
+    renderBadges();
+    renderLeaderboard();
+    observeSection('chefs',    renderChefs);
+    observeSection('seasonal', renderSeasonal);
+    observeSection('home',     animateCounters);
+  }
+
+  if (window.GieesK && window.GieesK.ready) {
+    window.GieesK.ready.then(renderDataViews).catch(function (e) {
+      console.error('[GieesK] Could not load recipes:', e);
+      var grid = document.getElementById('trendingGrid');
+      if (grid) grid.innerHTML =
+        '<p style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted)">' +
+        'Recipes could not be loaded. Please refresh the page.</p>';
+    });
+  } else {
+    renderDataViews();   // fallback if the loader is absent
+  }
 
   // Hero buttons
   var heroExplore = document.getElementById('heroExplore');

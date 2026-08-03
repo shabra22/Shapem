@@ -3734,7 +3734,7 @@ const RECIPES = [
 // ── KEN031–KEN040 ────────────────────────────────────────────────────
 
   {
-    id: 'KEN031',
+    id: 'KEN301',
     title: 'Kenyan Roasted Maize',
     localName: 'Mahindi ya Kuchoma',
     emoji: '🌽',
@@ -3791,7 +3791,7 @@ const RECIPES = [
     collections: ["Kenya's National Dishes", 'Street Food', 'Budget-Friendly Meals'],
     author: 'Mama Wanjiru', authorEmoji: '👩🏿‍🍳',
     meta: { spiceLevel: 'None', season: 'All Year', mealType: ['Snack'], cookingMethod: 'Boiled', primaryGrain: 'Maize', kidFriendly: true, freezerFriendly: false, prepAhead: false },
-    relatedDish: { id: 'KEN031', note: 'Boiled and roasted maize are the two great Kenyan maize street foods. Boiled maize (mahindi ya kuchemsha) is softer, more tender, and milkier — ideal for very fresh young maize. Roasted maize (mahindi ya kuchoma) has a smoky, charred character and firmer texture. Both are eaten with lemon and chilli salt.' },
+    relatedDish: { id: 'KEN032', note: 'Boiled and roasted maize are the two great Kenyan maize street foods. Boiled maize (mahindi ya kuchemsha) is softer, more tender, and milkier — ideal for very fresh young maize. Roasted maize (mahindi ya kuchoma) has a smoky, charred character and firmer texture. Both are eaten with lemon and chilli salt.' },
     desc: "Mahindi ya Kuchemsha is the soft, tender counterpart to roasted maize — whole cobs boiled in salted water until the kernels are sweet, milky, and perfectly cooked. One of the simplest and most satisfying snacks in Kenya.",
     longDesc: "Boiled maize is a staple of Kenyan street food stalls everywhere. Large pots of salted water bubble constantly, keeping freshly cooked cobs ready for the next customer. The boiling method preserves the natural milky sweetness of fresh young maize in a way that roasting cannot — the kernels stay plump, juicy, and tender. Served with lemon and salt, it is simple food at its very best.",
     ingredients: ['4 fresh maize cobs', '4 cups water', '1 tsp salt — for boiling', '1 lemon — halved', '1 tsp salt — for serving', '1 tsp chilli powder — optional'],

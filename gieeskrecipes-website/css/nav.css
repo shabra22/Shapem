@@ -135,18 +135,82 @@
 .nav-mobile a:hover { color: var(--text-primary); background: var(--bg-elevated); }
 .nav-mobile.open { display: flex; }
 
+/* ═══════════════════════════════════════════════════════════
+   MOBILE NAV
+   Layout: wordmark hard left · flexible gap · right cluster of
+   [search] [CTA pill] [burger], evenly spaced.
+   ═══════════════════════════════════════════════════════════ */
 @media (max-width: 900px) {
+  .nav-inner {
+    gap: 0;                      /* the spacer does the work, not gap */
+    justify-content: flex-start;
+  }
+
   .nav-links              { display: none; }
   .nav-actions .btn-ghost { display: none; }
-  .nav-burger             { display: flex; }
+
+  /* Logo: the SVG already contains the "GieesK" wordmark, so showing
+     the text span too rendered it twice. Text only on mobile — it
+     stays legible at small sizes where the SVG does not. */
+  .nav-logo-img  { display: none; }
+  .nav-logo-text { display: inline-block; font-size: 1.35rem; }
+  .nav-logo      { margin-right: auto; }   /* pushes everything else right */
+
+  /* Right cluster */
+  .nav-actions {
+    gap: 18px;
+    margin-left: auto;
+    align-items: center;
+  }
+
+  /* Bare search icon — no ring, matching the reference */
+  .btn-search-nav {
+    width: auto; height: auto;
+    border: none;
+    background: none;
+    padding: 4px;
+    font-size: 22px;
+    color: var(--text-primary);
+  }
+  .btn-search-nav:hover { border: none; color: var(--gold); }
+
+  /* CTA pill */
+  .nav-actions .btn-gold {
+    padding: 9px 20px;
+    font-size: 13px;
+    border-radius: var(--r-full);
+    white-space: nowrap;
+  }
+
+  /* Burger sits last, no auto-margin (the logo already pushed us right) */
+  .nav-burger {
+    display: flex;
+    margin-left: 0;
+    padding: 8px 0 8px 4px;
+  }
+
+  /* Logged-in avatar takes the CTA's slot */
+  #userMenu { margin-left: 0; }
+  #userMenu .user-avatar-btn {
+    padding: 3px;
+    border: none;
+    background: none;
+  }
+  #userMenu #userMenuName,
+  #userMenu .ti-chevron-down { display: none; }   /* avatar alone — keeps it tight */
 }
+
 @media (max-width: 520px) {
-  .nav-inner  { padding: 0 1rem; }
-  .nav-logo-text { font-size: 1.2rem; }
-  .nav-logo-img  { width: 28px; height: 28px; }
-  .btn-gold      { padding: 8px 14px; font-size: 12px; }
+  .nav-inner     { padding: 0 1rem; }
+  .nav-logo-text { font-size: 1.25rem; }
+  .nav-actions   { gap: 14px; }
+  .btn-search-nav{ font-size: 21px; }
+  .nav-actions .btn-gold { padding: 8px 16px; font-size: 12px; }
 }
-@media (max-width: 360px) {
-  .nav-actions .btn-gold { display: none; }
-  .nav-logo-text { display: none; }
+
+@media (max-width: 380px) {
+  .nav-logo-text { font-size: 1.1rem; }
+  .nav-actions   { gap: 11px; }
+  .nav-actions .btn-gold { padding: 7px 13px; font-size: 11.5px; }
+  .btn-search-nav{ font-size: 20px; }
 }

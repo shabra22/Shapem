@@ -435,6 +435,23 @@
     dustMat.uniforms.uPR.value = renderer.getPixelRatio();
   }, {passive:true});
 
+  /* ── Cinematic video backdrop (progressive enhancement) ─────── */
+  var videoOn = false;
+  if (window.GieesKVideo) {
+    videoOn = window.GieesKVideo.init({
+      sections: SECTIONS,
+      host: document.body,
+      onFail: function (reason) {
+        // Silent fallback — the WebGL scene already carries the page
+        document.body.classList.remove('has-video-bg');
+        if (window.console && reason === 'error') {
+          console.info('[GieesK] Video backdrop unavailable, using 3D scene only.');
+        }
+      }
+    });
+    if (videoOn) document.body.classList.add('has-video-bg');
+  }
+
   /* ── Ambient sound toggle (opt-in only) ─────────────────────── */
   var soundBtn = document.getElementById('heroSoundToggle');
   if (soundBtn) {
@@ -470,7 +487,7 @@
   }
 
   /* ── Loop ───────────────────────────────────────────────────── */
-  var clock = new THREE.Clock(), raf = null, audioAccum = 0;
+  var clock = new THREE.Clock(), raf = null, audioAccum = 0, videoAccum = 0;
 
   function frame() {
     raf = requestAnimationFrame(frame);
@@ -577,6 +594,22 @@
         if (fud.opacity < 0.008) { sysm.visible = false; continue; }
         sysm.visible = true;
         window.GieesKFX.update(sysm, dt, t, camZ, fxB, mouseOff);
+      }
+    }
+
+    /* ── Video backdrop follows the same scroll + cuisine mood ─── */
+    if (videoOn && window.GieesKVideo.isActive()) {
+      window.GieesKVideo.update(st.scrollT);
+      videoAccum += dt;
+      if (videoAccum > 0.5) {        // throttle — CSS filter changes are costly
+        videoAccum = 0;
+        // Nudge the grade toward the current cuisine's key colour
+        var hueShift = -6 + (curKey.r - curKey.b) * 14;
+        window.GieesKVideo.setGrade({
+          hueRotate: hueShift,
+          saturate : 1.12 + st.scrollT * 0.10,
+          brightness: 0.62 - st.scrollT * 0.06
+        });
       }
     }
 

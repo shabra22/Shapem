@@ -2,7 +2,43 @@
    GIEESKRECIPES — Recipe & Auth Modals
 ═══════════════════════════════════════════ */
 
+/* Accepts a light index record, a full record, or a bare id.
+   Fetches full detail on demand, showing a loading state meanwhile. */
 function openRecipeModal(recipe) {
+  if (!recipe) return;
+
+  var id = (typeof recipe === 'object') ? recipe.id : recipe;
+
+  // Already have the full record? Render straight away.
+  var isFull = typeof recipe === 'object' && recipe.ingredients && recipe.steps;
+
+  if (!isFull && window.GieesK && window.GieesK.getRecipe) {
+    var m = document.getElementById('recipeModal');
+    var c = document.getElementById('modalContent');
+    if (m && c) {
+      // Show the shell immediately — feels instant even while fetching
+      c.innerHTML =
+        '<div class="modal-loading" style="padding:5rem 2rem;text-align:center">' +
+        '<div class="spinner" style="margin:0 auto 1rem"></div>' +
+        '<p style="color:var(--text-muted);font-size:14px">Loading recipe…</p></div>';
+      m.classList.add('visible');
+      document.body.style.overflow = 'hidden';
+    }
+    window.GieesK.getRecipe(id).then(function (full) {
+      renderRecipeModal(full);
+    }).catch(function (err) {
+      console.error('[GieesK] Recipe load failed:', err);
+      if (c) c.innerHTML =
+        '<div style="padding:4rem 2rem;text-align:center">' +
+        '<p style="color:var(--text-muted)">Sorry — this recipe could not be loaded.</p></div>';
+    });
+    return;
+  }
+
+  renderRecipeModal(recipe);
+}
+
+function renderRecipeModal(recipe) {
   var modal   = document.getElementById('recipeModal');
   var content = document.getElementById('modalContent');
   if (!modal || !content || !recipe) return;

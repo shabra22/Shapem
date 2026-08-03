@@ -270,3 +270,64 @@
   .hero-sound-toggle { right: 1rem; bottom: 1.2rem; padding: 0.45rem 0.7rem; }
   .hero-sound-toggle span { display: none; }
 }
+
+/* ── Site-wide cinematic video backdrop ───────────────────────
+   Sits behind everything. Fixed so it spans the whole page, not
+   just the hero. The WebGL ingredient scene layers on top of it. */
+.hero-video-root {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.8s ease;
+  /* filter (colour grade) is applied inline by hero-video.js */
+  will-change: opacity;
+}
+.hero-video-root.is-ready { opacity: 1; }
+
+.hero-video-layer {
+  position: absolute;
+  top: 50%; left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto; height: auto;
+  transform: translate(-50%, -50%) scale(1.06); /* hide filter blur edges */
+  object-fit: cover;
+}
+
+/* Tint + vignette locking the footage into the GieesK palette.
+   Sits ABOVE the video, BELOW the content. */
+.hero-video-root::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    /* warm gold light from upper left */
+    radial-gradient(ellipse 70% 55% at 22% 18%,
+      rgba(201,150,58,0.16) 0%, transparent 62%),
+    /* emerald counter-light lower right */
+    radial-gradient(ellipse 60% 50% at 82% 82%,
+      rgba(29,158,117,0.10) 0%, transparent 60%),
+    /* deep vignette so UI stays readable everywhere */
+    radial-gradient(ellipse 92% 82% at 50% 50%,
+      transparent 0%, rgba(8,8,7,0.55) 72%, rgba(8,8,7,0.88) 100%),
+    /* overall darkening floor */
+    linear-gradient(rgba(10,10,9,0.42), rgba(10,10,9,0.58));
+}
+
+/* Hero canvas must sit above the video */
+#heroCanvas { z-index: 0; }
+
+/* When video is live, let the page background show it through */
+body.has-video-bg .hero {
+  background: transparent !important;
+}
+
+@media (max-width: 767px) {
+  .hero-video-root { display: none; }   /* WebGL scene only on mobile */
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-video-root { display: none; }
+}

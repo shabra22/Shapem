@@ -21,12 +21,14 @@ function performSearch(query) {
     dessert:   r => r.title.toLowerCase().includes('sweet') || r.tags.includes('dessert'),
   };
 
+  // Light index: ingredients live in r.s (search blob), not r.ingredients
   let results = RECIPES.filter(r =>
-    r.title.toLowerCase().includes(query) ||
-    r.cuisine.toLowerCase().includes(query) ||
-    r.desc.toLowerCase().includes(query) ||
-    r.tags.some(t => t.includes(query)) ||
-    r.ingredients.some(i => i.toLowerCase().includes(query))
+    (r.title   && r.title.toLowerCase().includes(query)) ||
+    (r.cuisine && r.cuisine.toLowerCase().includes(query)) ||
+    (r.country && r.country.toLowerCase().includes(query)) ||
+    (r.desc    && r.desc.toLowerCase().includes(query)) ||
+    (r.tags    && r.tags.some(t => t.includes(query))) ||
+    (r.s       && r.s.includes(query))
   );
 
   if (activeFilter !== 'all' && filterMap[activeFilter]) {
