@@ -229,3 +229,44 @@
   }
   .stat-num { font-size: 1.4rem; }
 }
+
+/* ── Ambient sound toggle ─────────────────────────────────────
+   Off by default. Sound is opt-in, never forced on a visitor. */
+.hero-sound-toggle {
+  position: absolute;
+  right: 2rem;
+  bottom: 2.4rem;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(12,12,11,0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255,255,255,0.62);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: color .25s ease, border-color .25s ease,
+              background .25s ease, transform .25s ease;
+}
+.hero-sound-toggle:hover {
+  color: rgba(255,255,255,0.92);
+  border-color: rgba(201,150,58,0.5);
+  transform: translateY(-1px);
+}
+.hero-sound-toggle i { font-size: 15px; }
+.hero-sound-toggle[aria-pressed="true"] {
+  color: var(--gold, #C9963A);
+  border-color: rgba(201,150,58,0.65);
+  background: rgba(201,150,58,0.12);
+}
+.hero-sound-toggle span { opacity: .9; }
+
+@media (max-width: 640px) {
+  .hero-sound-toggle { right: 1rem; bottom: 1.2rem; padding: 0.45rem 0.7rem; }
+  .hero-sound-toggle span { display: none; }
+}

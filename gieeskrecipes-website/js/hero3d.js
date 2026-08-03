@@ -49,18 +49,31 @@
   var camera = new THREE.PerspectiveCamera(52, W / H, 0.1, 160);
   camera.position.set(0, 0, 18);
 
-  /* ── Section moods ──────────────────────────────────────────── */
+  /* ── Cuisine journey: the scene travels the world as you scroll ─ */
   var SECTIONS = [
-    { key:0xC9963A, fill:0x1D9E75, fog:0x0A0A09,
-      mix:['tomato','lemon','orange','basil','mint','chili','berry','garlic','peppercorn','cardamom'] },
-    { key:0xD9A24B, fill:0x8B5A2B, fog:0x0C0906,
-      mix:['coffeebean','berry','blueberry','strawberry','cinnamon','vanilla','wheat','cocoabean'] },
-    { key:0xC46A2E, fill:0x2E7D4F, fog:0x080B08,
-      mix:['garlic','onion','tomato','chili','basil','coriander','peppercorn','rice'] },
-    { key:0xE0B060, fill:0xA32A3E, fog:0x0B0708,
-      mix:['strawberry','cocoabean','vanilla','cinnamon','staranise','berry','blueberry'] },
-    { key:0xB8D96A, fill:0x1D9E75, fog:0x070A0A,
-      mix:['lemon','orange','mint','ice','droplet','berry','cardamom'] }
+    { id:'kenya',    key:0xE08A2E, fill:0x2E7D4F, fog:0x0B0806,
+      mix:['tomato','chili','onion','coriander','garlic','peppercorn','berry','rice'],
+      fx :{ spice:1.0, ember:0.75, bokeh:0.9, droplet:0.3 } },
+
+    { id:'ethiopia', key:0xC9603A, fill:0x8B5A2B, fog:0x0C0705,
+      mix:['coffeebean','chili','cardamom','garlic','onion','peppercorn','wheat','staranise'],
+      fx :{ spice:1.2, ember:0.9, steam:0.7, bokeh:0.8, sand:0.5 } },
+
+    { id:'italy',    key:0xD9A24B, fill:0x3E9C55, fog:0x0A0A07,
+      mix:['tomato','basil','garlic','lemon','onion','chili','wheat','peppercorn'],
+      fx :{ steam:1.0, bokeh:1.0, spice:0.6, droplet:0.45 } },
+
+    { id:'tanzania', key:0xB8D96A, fill:0x1D9E75, fog:0x070A0A,
+      mix:['lemon','orange','mint','coriander','rice','chili','droplet','ice'],
+      fx :{ mist:1.0, droplet:0.9, bokeh:0.85, spice:0.5 } },
+
+    { id:'japan',    key:0xE8B8C8, fill:0x6A8CB8, fog:0x080809,
+      mix:['rice','ice','mint','droplet','peppercorn','berry'],
+      fx :{ blossom:1.2, mist:0.5, droplet:0.6, bokeh:0.7 } },
+
+    { id:'nordic',   key:0xBFD8E8, fill:0x6E8FA8, fog:0x06080A,
+      mix:['ice','droplet','berry','blueberry','wheat','rice'],
+      fx :{ snow:1.3, mist:0.6, bokeh:0.6 } }
   ];
 
   /* ── SSS-approximating shader ───────────────────────────────── */
@@ -369,6 +382,21 @@
     scene.add(rays);
   }
 
+  /* ── Atmospheric FX systems ─────────────────────────────────── */
+  var fxSystems = {};
+  if (window.GieesKFX) {
+    var fxBounds = { r: FIELD_R*1.15, yMin: -13, yMax: 13, zFar: Z_FAR, zNear: Z_NEAR };
+    var fxScale  = isMobile ? 0.4 : (isLowEnd ? 0.65 : 1.0);
+    window.GieesKFX.list.forEach(function (name) {
+      var sysm = window.GieesKFX.create(THREE, name, fxScale, fxBounds);
+      if (sysm) {
+        sysm.material.uniforms.uPR.value = renderer.getPixelRatio();
+        scene.add(sysm);
+        fxSystems[name] = sysm;
+      }
+    });
+  }
+
   /* ── State ──────────────────────────────────────────────────── */
   var st = { scroll:0, scrollT:0, mx:0, my:0, mxT:0, myT:0,
              camZ:18, camZT:18, visible:true, intro:0 };
@@ -407,8 +435,42 @@
     dustMat.uniforms.uPR.value = renderer.getPixelRatio();
   }, {passive:true});
 
+  /* ── Ambient sound toggle (opt-in only) ─────────────────────── */
+  var soundBtn = document.getElementById('heroSoundToggle');
+  if (soundBtn) {
+    if (!window.GieesKAudio || !window.GieesKAudio.supported()) {
+      soundBtn.style.display = 'none';
+    } else {
+      soundBtn.addEventListener('click', function () {
+        var on = window.GieesKAudio.toggle();
+        soundBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        soundBtn.setAttribute('aria-label',
+          on ? 'Disable ambient sound' : 'Enable ambient sound');
+        var ic = soundBtn.querySelector('i');
+        if (ic) ic.className = on ? 'ti ti-volume' : 'ti ti-volume-3';
+        if (on) {
+          var sf2 = st.scrollT*(SECTIONS.length-1);
+          var si2 = Math.min(SECTIONS.length-2, Math.floor(sf2));
+          window.GieesKAudio.setMix(
+            SECTIONS[si2].id,
+            SECTIONS[Math.min(si2+1, SECTIONS.length-1)].id,
+            sf2-si2, 1.5);
+        }
+      });
+      // Pause ambience when the tab loses focus
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden && window.GieesKAudio.isOn()) {
+          window.GieesKAudio.disable();
+          soundBtn.setAttribute('aria-pressed','false');
+          var ic2 = soundBtn.querySelector('i');
+          if (ic2) ic2.className = 'ti ti-volume-3';
+        }
+      });
+    }
+  }
+
   /* ── Loop ───────────────────────────────────────────────────── */
-  var clock = new THREE.Clock(), raf = null;
+  var clock = new THREE.Clock(), raf = null, audioAccum = 0;
 
   function frame() {
     raf = requestAnimationFrame(frame);
@@ -500,6 +562,31 @@
       rm.uniforms.uTime.value = t;
       rays.position.x = st.mx*0.9;
       rays.position.z = camZ - 30;
+    }
+
+    /* ── Atmospheric FX: cross-fade by cuisine ─────────────────── */
+    if (window.GieesKFX) {
+      var mouseOff = { x: st.mx, y: -st.my };
+      var fxB = { r: FIELD_R*1.15, yMin:-13, yMax:13, zFar:Z_FAR, zNear:Z_NEAR };
+      for (var fk in fxSystems) {
+        var sysm = fxSystems[fk], fud = sysm.userData;
+        var wA = (A.fx && A.fx[fk]) || 0;
+        var wB = (B.fx && B.fx[fk]) || 0;
+        fud.target = wA*(1-fr) + wB*fr;
+        fud.opacity += (fud.target - fud.opacity) * Math.min(1, dt*0.9);
+        if (fud.opacity < 0.008) { sysm.visible = false; continue; }
+        sysm.visible = true;
+        window.GieesKFX.update(sysm, dt, t, camZ, fxB, mouseOff);
+      }
+    }
+
+    /* ── Ambient soundscape follows the cuisine ────────────────── */
+    if (window.GieesKAudio && window.GieesKAudio.isOn()) {
+      audioAccum += dt;
+      if (audioAccum > 0.4) {          // throttle — audio params are expensive
+        audioAccum = 0;
+        window.GieesKAudio.setMix(A.id, B.id, fr, 1.0);
+      }
     }
 
     renderer.render(scene, camera);
