@@ -7,7 +7,7 @@
 //   GET /recipes?tag=vegan → filter by tag
 //   GET /recipes?q=ugali   → search by keyword
 
-const recipesData = require('../../recipes.json');
+const recipesData = require('../../data/index.json');  // light records only — see DATA-README.md
 
 exports.handler = async function(event) {
   const headers = {

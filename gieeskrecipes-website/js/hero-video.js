@@ -51,7 +51,13 @@ window.GieesKVideo = (function () {
       saturate   : 1.12,
       sepia      : 0.16,   // warms the whole image
       hueRotate  : -6,     // nudge toward gold/amber
-      blur       : 1.5     // px — keeps it a backdrop, not a distraction
+      // Blur is baked into hero-reel.mp4 at encode time (see BUILD-REEL.sh),
+      // NOT computed live here. filter:blur() on a full-viewport playing
+      // <video> recomputes a Gaussian kernel across the whole screen on
+      // every frame — one of the most GPU-expensive things a browser can
+      // do, and it was the main cause of the video feeling laggy. Baking
+      // it into the file costs nothing at runtime and looks identical.
+      blur       : 0
     },
 
     fadeDuration : 1.6,    // seconds, cross-fade between clips
@@ -82,12 +88,15 @@ window.GieesKVideo = (function () {
   }
 
   function gradeString(g) {
-    return 'brightness(' + g.brightness + ') ' +
-           'contrast('   + g.contrast   + ') ' +
-           'saturate('   + g.saturate   + ') ' +
-           'sepia('      + g.sepia      + ') ' +
-           'hue-rotate(' + g.hueRotate  + 'deg) ' +
-           'blur('       + g.blur       + 'px)';
+    var f = 'brightness(' + g.brightness + ') ' +
+            'contrast('   + g.contrast   + ') ' +
+            'saturate('   + g.saturate   + ') ' +
+            'sepia('      + g.sepia      + ') ' +
+            'hue-rotate(' + g.hueRotate  + 'deg)';
+    // Even blur(0px) can force an isolated compositing layer in some
+    // engines — omit the term entirely rather than pass a no-op value.
+    if (g.blur && g.blur > 0) f += ' blur(' + g.blur + 'px)';
+    return f;
   }
 
   function makeVideo(src, webm, poster) {
@@ -176,8 +185,25 @@ window.GieesKVideo = (function () {
       if (!enabled) return;
       layers.forEach(function (v) {
         if (document.hidden) v.pause();
-        else { var p = v.play(); if (p && p.catch) p.catch(function(){}); }
+        else if (!scrollPaused) { var p = v.play(); if (p && p.catch) p.catch(function(){}); }
       });
+    });
+  }
+
+  // Scroll-depth pause: the backdrop is intentionally fixed behind the
+  // whole site, but decoding video frames forever — including deep in
+  // the page where it's long out of view under other content — costs
+  // CPU/GPU on every scroll and interaction for no visible benefit.
+  // Pausing past a generous depth (still covers hero + the next couple
+  // of sections) and resuming near the top keeps the "spans the site"
+  // effect while not taxing the page permanently.
+  var scrollPaused = false;
+  function setScrollPaused(shouldPause) {
+    if (!enabled || shouldPause === scrollPaused) return;
+    scrollPaused = shouldPause;
+    layers.forEach(function (v) {
+      if (scrollPaused) v.pause();
+      else if (!document.hidden) { var p = v.play(); if (p && p.catch) p.catch(function(){}); }
     });
   }
 
@@ -228,6 +254,7 @@ window.GieesKVideo = (function () {
     init : init,
     update : update,
     setGrade: setGrade,
+    setScrollPaused: setScrollPaused,
     destroy: destroy,
     isActive: function(){ return enabled; },
     CONFIG : CONFIG

@@ -29,11 +29,30 @@
   var ready = new Promise(function (res, rej) { resolveReady = res; rejectReady = rej; });
 
   /* ── Load the catalogue ──────────────────────────────────────── */
+  // Retries once after a short delay — covers a transient network blip
+  // or a deploy that was still propagating when the request landed.
+  function fetchIndex(attempt) {
+    return fetch(INDEX_URL, { cache: 'default' }).then(function (r) {
+      if (!r.ok) {
+        var err = new Error('Fetched ' + INDEX_URL + ' → HTTP ' + r.status);
+        err.status = r.status;
+        throw err;
+      }
+      var ct = r.headers.get('content-type') || '';
+      if (ct.indexOf('json') === -1 && ct.indexOf('text') === -1) {
+        // Wrong content-type usually means the host served an HTML
+        // fallback (404/SPA catch-all) instead of the actual file.
+        console.warn('[GieesK] Unexpected content-type for index.json:', ct);
+      }
+      return r.json();
+    });
+  }
+
   function loadIndex() {
-    return fetch(INDEX_URL, { cache: 'default' })
-      .then(function (r) {
-        if (!r.ok) throw new Error('index ' + r.status);
-        return r.json();
+    return fetchIndex()
+      .catch(function (err) {
+        console.warn('[GieesK] Index fetch failed, retrying once…', err.message);
+        return new Promise(function (res) { setTimeout(res, 900); }).then(fetchIndex);
       })
       .then(function (list) {
         window.RECIPES = list;
@@ -42,7 +61,21 @@
         return list;
       })
       .catch(function (err) {
-        console.error('[GieesK] Recipe index failed to load:', err);
+        // Diagnostic-rich failure — this is what to check in DevTools
+        // Console/Network if recipes still won't load in production:
+        //   1. Does GET /data/index.json return 200 with JSON? (Network tab)
+        //   2. Was `node build-data.js` run and its output committed?
+        //   3. Does the host's build/output-directory setting include
+        //      the repo root, not just js/ or css/?
+        console.error(
+          '[GieesK] Recipe index could not be loaded after retry.\n' +
+          '  URL attempted: ' + new URL(INDEX_URL, location.href).href + '\n' +
+          '  Error: ' + err.message + '\n' +
+          '  Checklist: (1) does that URL return 200 + JSON in a new tab? ' +
+          '(2) was `node build-data.js` run and data/index.json committed? ' +
+          '(3) does the host serve the repo root, not a build subfolder?',
+          err
+        );
         document.dispatchEvent(new CustomEvent('recipes:error', { detail: { error: err } }));
         rejectReady(err);
         throw err;

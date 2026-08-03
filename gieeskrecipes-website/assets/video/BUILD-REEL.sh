@@ -36,7 +36,13 @@ echo "▶ Building hero reel from 3 clips…"
 GRADE="eq=brightness=-0.04:contrast=1.16:saturation=1.05,\
 colorbalance=rs=0.06:gs=0.01:bs=-0.06:rm=0.04:gm=0.01:bm=-0.03:rh=0.08:gh=0.03:bh=-0.05,\
 curves=r='0/0 0.5/0.53 1/1':g='0/0 0.5/0.5 1/0.98':b='0/0.02 0.5/0.47 1/0.94',\
-unsharp=5:5:0.4"
+unsharp=5:5:0.4,\
+gblur=sigma=2.4"
+# ^ blur is baked in HERE, not applied live with CSS filter:blur() in the
+#   browser. Real-time blur on a full-viewport playing video is one of the
+#   most expensive things a browser can do — it forced a Gaussian
+#   recompute across the whole screen on every frame. Baking it costs
+#   nothing at runtime (and compresses smaller too — less detail to encode).
 
 SCALE="scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},setsar=1,fps=30"
 

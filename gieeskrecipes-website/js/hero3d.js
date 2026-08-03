@@ -406,10 +406,21 @@
   var curFog = new THREE.Color(SECTIONS[0].fog);
   var tA = new THREE.Color(), tB = new THREE.Color();
 
+  // Video stays "part of the site" visually for a generous scroll depth
+  // (hero + a couple of sections beyond it) then pauses decoding once
+  // genuinely far down — where it's long buried under other content and
+  // costing GPU/CPU for zero visible benefit. Resumes automatically on
+  // the way back up. Threshold in viewport-heights, easy to tune.
+  var VIDEO_PAUSE_AFTER_VH = 3;
   function onScroll() {
     var d = document.documentElement;
     var max = (d.scrollHeight - window.innerHeight) || 1;
     st.scroll = Math.min(1, Math.max(0, window.scrollY/max));
+    if (window.GieesKVideo) {
+      window.GieesKVideo.setScrollPaused(
+        window.scrollY > window.innerHeight * VIDEO_PAUSE_AFTER_VH
+      );
+    }
   }
   window.addEventListener('scroll', onScroll, {passive:true});
   onScroll();
