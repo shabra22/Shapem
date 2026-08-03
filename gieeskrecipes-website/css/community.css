@@ -4,18 +4,11 @@
 
 /* ── Community hero ─────────────────────── */
 .community-page-hero {
-  background: linear-gradient(135deg, #0A0A09 0%, #0D160F 50%, #0A0A09 100%);
-  border-bottom: 1px solid var(--border-dim);
+  background: var(--bg-void);
   padding: calc(var(--nav-h) + 3rem) 0 3rem;
   text-align: center;
   position: relative;
   overflow: hidden;
-}
-.community-page-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(29,158,117,0.08) 0%, transparent 70%);
 }
 .community-page-hero .container { position: relative; }
 .community-hero-title {
