@@ -324,10 +324,10 @@ function buildSavedPanel(panel) {
       </button>
     </div>
     <div class="collection-tabs" id="collectionTabs">
-      <button class="collection-tab active" onclick="filterCollection('all',this)">All Saved</button>
-      <button class="collection-tab" onclick="filterCollection('Favourites',this)">⭐ Favourites</button>
-      <button class="collection-tab" onclick="filterCollection('Want to Try',this)">🔖 Want to Try</button>
-      <button class="collection-tab" onclick="filterCollection('Made It',this)">✅ Made It</button>
+      <button class="collection-tab active" data-collection="all" onclick="filterCollection('all',this)">All Saved</button>
+      <button class="collection-tab" data-collection="Favourites" onclick="filterCollection('Favourites',this)">⭐ Favourites</button>
+      <button class="collection-tab" data-collection="Want to Try" onclick="filterCollection('Want to Try',this)">🔖 Want to Try</button>
+      <button class="collection-tab" data-collection="Made It" onclick="filterCollection('Made It',this)">✅ Made It</button>
     </div>
     <div id="savedGrid" class="recipe-grid"></div>`;
 
@@ -354,7 +354,7 @@ function timeAgo(isoString) {
 async function loadSavedRecipes(panel) {
   const sb = getSupabase();
   if (!sb || !currentUser) return;
-  const { data } = await sb.from('saved_recipes').select('recipe_id, saved_at').eq('user_id', currentUser.id);
+  const { data } = await sb.from('saved_recipes').select('recipe_id, saved_at, collection').eq('user_id', currentUser.id);
   const grid = document.getElementById('savedGrid');
   if (!grid) return;
 
@@ -374,7 +374,8 @@ async function loadSavedRecipes(panel) {
   }
 
   const savedAtById = {};
-  data.forEach(d => { savedAtById[d.recipe_id] = d.saved_at; });
+  const collectionById = {};
+  data.forEach(d => { savedAtById[d.recipe_id] = d.saved_at; collectionById[d.recipe_id] = d.collection || 'Saved'; });
 
   const savedIds = data.map(d => d.recipe_id);
   const savedRecipes = RECIPES.filter(r => savedIds.includes(String(r.id)))
@@ -389,23 +390,75 @@ async function loadSavedRecipes(panel) {
   grid.innerHTML = '';
   savedRecipes.forEach((r, i) => {
     const card = createRecipeCard(r, i * 60);
-    card.dataset.title   = r.title.toLowerCase();
-    card.dataset.cuisine = (r.cuisine || '').toLowerCase();
+    card.dataset.title      = r.title.toLowerCase();
+    card.dataset.cuisine    = (r.cuisine || '').toLowerCase();
+    card.dataset.collection = collectionById[String(r.id)];
+
+    const body = card.querySelector('.recipe-card-body');
 
     const savedAt = savedAtById[String(r.id)];
-    if (savedAt) {
-      const body = card.querySelector('.recipe-card-body');
-      if (body) {
-        const badge = document.createElement('div');
-        badge.className = 'saved-date-badge';
-        badge.title = new Date(savedAt).toLocaleString(); // exact date/time on hover
-        badge.innerHTML = '<i class="ti ti-clock"></i> Saved ' + timeAgo(savedAt);
-        body.appendChild(badge);
-      }
+    if (savedAt && body) {
+      const badge = document.createElement('div');
+      badge.className = 'saved-date-badge';
+      badge.title = new Date(savedAt).toLocaleString(); // exact date/time on hover
+      badge.innerHTML = '<i class="ti ti-clock"></i> Saved ' + timeAgo(savedAt);
+      body.appendChild(badge);
+    }
+
+    // Lets a saved recipe actually be filed into Favourites / Want to
+    // Try / Made It — previously there was no way to do this at all,
+    // so those three tabs could never show anything regardless of
+    // whether filtering itself worked.
+    if (body) {
+      const picker = document.createElement('div');
+      picker.className = 'saved-collection-picker';
+      const options = [
+        { key: 'Favourites',  icon: '⭐', label: 'Favourite' },
+        { key: 'Want to Try', icon: '🔖', label: 'Want to Try' },
+        { key: 'Made It',     icon: '✅', label: 'Made It' },
+      ];
+      picker.innerHTML = options.map(o =>
+        `<button class="saved-collection-btn ${card.dataset.collection === o.key ? 'active' : ''}" data-collection="${o.key}" title="${o.label}" onclick="event.preventDefault();event.stopPropagation();setRecipeCollection('${r.id}', '${o.key}', this)">${o.icon}</button>`
+      ).join('');
+      body.appendChild(picker);
     }
 
     grid.appendChild(card);
   });
+}
+
+async function setRecipeCollection(recipeId, collection, btn) {
+  const sb = getSupabase();
+  if (!sb || !currentUser) return;
+
+  const card = btn.closest('.recipe-card');
+  const wasActive = btn.classList.contains('active');
+  // Clicking an already-active option un-categorizes it back to plain
+  // "Saved" rather than forcing it to always belong to exactly one
+  // collection — matches how the tabs read (a recipe can just be
+  // "saved" without being flagged as any of the three).
+  const newCollection = wasActive ? 'Saved' : collection;
+
+  const { error } = await sb.from('saved_recipes')
+    .update({ collection: newCollection })
+    .eq('user_id', currentUser.id).eq('recipe_id', String(recipeId));
+
+  if (error) { console.error('[GieesK] Could not update collection:', error); return; }
+
+  if (card) {
+    card.dataset.collection = newCollection;
+    card.querySelectorAll('.saved-collection-btn').forEach(b => {
+      b.classList.toggle('active', !wasActive && b.dataset.collection === collection);
+    });
+    // If a collection tab other than "All Saved" is currently active,
+    // this card may need to disappear from view now that its
+    // collection changed.
+    const activeTab = document.querySelector('.collection-tab.active');
+    if (activeTab && activeTab.dataset.collection !== 'all') {
+      const activeCollection = activeTab.dataset.collection;
+      card.style.display = card.dataset.collection === activeCollection ? '' : 'none';
+    }
+  }
 }
 
 function filterSaved(q) {
@@ -418,8 +471,10 @@ function filterSaved(q) {
 function filterCollection(col, btn) {
   document.querySelectorAll('.collection-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
-  // For now show all (collections stored in DB in future)
-  document.querySelectorAll('#savedGrid .recipe-card').forEach(c => c.style.display = '');
+
+  document.querySelectorAll('#savedGrid .recipe-card').forEach(c => {
+    c.style.display = (col === 'all' || c.dataset.collection === col) ? '' : 'none';
+  });
 }
 
 // ══════════════════════════════════════════

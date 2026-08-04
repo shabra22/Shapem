@@ -311,6 +311,32 @@
 }
 .saved-date-badge i { font-size: 12px; }
 
+.saved-collection-picker {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.saved-collection-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  border-radius: var(--r-full);
+  border: 1px solid var(--border-dim);
+  background: var(--bg-elevated);
+  opacity: 0.55;
+  cursor: pointer;
+  transition: opacity .2s, border-color .2s, transform .15s;
+}
+.saved-collection-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.saved-collection-btn.active {
+  opacity: 1;
+  border-color: var(--border-gold);
+  background: rgba(201,150,58,0.14);
+}
+
 /* ══════════════════════════════════════════
    MEAL PLANNER PAGE
 ══════════════════════════════════════════ */
