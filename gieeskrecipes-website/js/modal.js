@@ -42,7 +42,7 @@ function renderRecipeModal(recipe) {
   var modal   = document.getElementById('recipeModal');
   var content = document.getElementById('modalContent');
   if (!modal || !content || !recipe) return;
-  window._currentModalRecipe = recipe;   // used by addCurrentRecipeToShoppingList()
+  window._currentModalRecipe = recipe;   // used by saveCurrentRecipeFromModal(), addCurrentRecipeToShoppingList(), addCurrentRecipeToMealPlan()
 
   var ingredientsHTML = (recipe.ingredients || []).map(function(ing) {
     return '<div class="ingredient-item">' + ing + '</div>';
@@ -343,7 +343,7 @@ function renderRecipeModal(recipe) {
       sustainabilityHTML +
       relatedHTML +
       '<div style="display:flex;gap:12px;margin-top:var(--space-xl);flex-wrap:wrap">' +
-        '<button class="btn-gold btn-lg" onclick="if(typeof saveRecipe===\'function\')saveRecipe(\'' + recipe.id + '\');this.innerHTML=\'<i class=\\\"ti ti-bookmark-filled\\\"></i> Saved!\'">' +
+        '<button class="btn-gold btn-lg" id="modalSaveBtn" onclick="saveCurrentRecipeFromModal()">' +
           '<i class="ti ti-bookmark"></i> Save Recipe' +
         '</button>' +
         '<button class="btn-outline btn-lg" onclick="addCurrentRecipeToMealPlan()">' +
@@ -418,6 +418,34 @@ function closeRecipeModal() {
   // homepage URL on close so the address bar reflects what's on screen.
   if (location.pathname.indexOf('/recipes/') === 0) {
     history.pushState(null, '', '/');
+  }
+}
+
+// Called by the modal's "Save Recipe" button. Previously this was an
+// inline onclick that built its "Saved!" state via raw HTML string
+// concatenation with double quotes nested inside a double-quoted HTML
+// attribute — the HTML parser (unlike JS) doesn't understand \" as an
+// escaped quote, so it terminated the onclick attribute early and spilled
+// the rest out as literal garbage text on the button (visible as
+// Saved!'"> in the UI). It also never actually waited for saveRecipe()'s
+// real result, so it claimed success unconditionally.
+async function saveCurrentRecipeFromModal() {
+  var recipe = window._currentModalRecipe;
+  var btn = document.getElementById('modalSaveBtn');
+  if (!recipe || typeof saveRecipe !== 'function') return;
+
+  if (btn) { btn.disabled = true; }
+
+  var ok = await saveRecipe(recipe.id);
+
+  if (btn) {
+    btn.disabled = false;
+    if (ok) {
+      btn.innerHTML = '<i class="ti ti-bookmark-filled"></i> Saved!';
+    } else {
+      btn.innerHTML = '<i class="ti ti-bookmark"></i> Save Recipe';
+      console.error('[GieesK] Could not save recipe — check saved_recipes table/RLS.');
+    }
   }
 }
 
