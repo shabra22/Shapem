@@ -27,12 +27,16 @@
 .about-hero .container { position: relative; }
 
 .about-logo {
-  width: 80px;
-  height: 80px;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+  aspect-ratio: 923 / 300;
   object-fit: contain;
   margin: 0 auto 1.5rem;
   display: block;
-  filter: drop-shadow(0 0 20px rgba(201,150,58,0.3));
+  filter:
+    drop-shadow(0 2px 8px rgba(0,0,0,0.5))
+    drop-shadow(0 0 22px rgba(201,150,58,0.28));
 }
 
 .about-hero-title {

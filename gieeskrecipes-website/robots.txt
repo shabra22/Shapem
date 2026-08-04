@@ -5,7 +5,6 @@ Allow: /
 # Block build/config artifacts
 Disallow: /js/data.js
 Disallow: /*.json$
-Disallow: /netlify.toml
 
 # Sitemap
 Sitemap: https://gieeskrecipes.pages.dev/sitemap.xml

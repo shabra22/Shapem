@@ -34,36 +34,50 @@ function createRecipeCard(recipe, delay) {
     return '<span class="badge badge-emerald">' + t + '</span>';
   }).join('');
 
-  card.innerHTML =
-    '<div class="recipe-card-img">' +
-      '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;background:var(--bg-elevated)">' +
-        recipe.emoji +
-      '</div>' +
-      '<div class="recipe-card-badges">' + tagsHTML + '</div>' +
-      '<button class="recipe-save-btn" data-id="' + recipe.id + '" aria-label="Save recipe">' +
-        '<i class="ti ti-bookmark"></i>' +
-      '</button>' +
-    '</div>' +
-    '<div class="recipe-card-body">' +
-      '<div class="recipe-card-meta">' +
-        '<span class="recipe-meta-item"><i class="ti ti-clock"></i>' + recipe.time + 'm</span>' +
-        '<span class="recipe-meta-item"><i class="ti ti-flame"></i>' + recipe.cal + ' cal</span>' +
-        '<span class="badge badge-' + diffColor(recipe.diff) + '">' + recipe.diff + '</span>' +
-      '</div>' +
-      '<h3 class="recipe-card-title">' + recipe.title + '</h3>' +
-      '<div class="recipe-card-author">' +
-        '<div class="author-avatar">' + (recipe.authorEmoji || '👨‍🍳') + '</div>' +
-        '<span class="author-name">' + (recipe.author || '') + '</span>' +
-        '<span class="recipe-rating"><i class="ti ti-star-filled" style="font-size:12px"></i> ' + recipe.rating + '</span>' +
-      '</div>' +
-    '</div>';
+  var escTitle = String(recipe.title)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
-  card.addEventListener('click', function(e) {
-    if (e.target.closest('.recipe-save-btn')) return;
+  card.innerHTML =
+    '<a class="recipe-card-link" href="/recipes/' + recipe.id + '.html" aria-label="' + escTitle + '">' +
+      '<div class="recipe-card-img">' +
+        '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:5rem;background:var(--bg-elevated)">' +
+          recipe.emoji +
+        '</div>' +
+        '<div class="recipe-card-badges">' + tagsHTML + '</div>' +
+      '</div>' +
+      '<div class="recipe-card-body">' +
+        '<div class="recipe-card-meta">' +
+          '<span class="recipe-meta-item"><i class="ti ti-clock"></i>' + recipe.time + 'm</span>' +
+          '<span class="recipe-meta-item"><i class="ti ti-flame"></i>' + recipe.cal + ' cal</span>' +
+          '<span class="badge badge-' + diffColor(recipe.diff) + '">' + recipe.diff + '</span>' +
+        '</div>' +
+        '<h3 class="recipe-card-title">' + recipe.title + '</h3>' +
+        '<div class="recipe-card-author">' +
+          '<div class="author-avatar">' + (recipe.authorEmoji || '👨‍🍳') + '</div>' +
+          '<span class="author-name">' + (recipe.author || '') + '</span>' +
+          '<span class="recipe-rating"><i class="ti ti-star-filled" style="font-size:12px"></i> ' + recipe.rating + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</a>' +
+    '<button class="recipe-save-btn" data-id="' + recipe.id + '" aria-label="Save recipe">' +
+      '<i class="ti ti-bookmark"></i>' +
+    '</button>';
+
+  // Real <a href> means: middle-click/right-click "open in new tab" work,
+  // crawlers can follow it to the static page, and a plain click still
+  // gets the instant in-page modal — pushState keeps the address bar
+  // (and back button, and shared links) in sync with what's showing.
+  card.querySelector('.recipe-card-link').addEventListener('click', function(e) {
+    e.preventDefault();
     openRecipeModal(recipe);
+    var url = '/recipes/' + recipe.id + '.html';
+    if (location.pathname !== url) {
+      history.pushState({ recipeId: recipe.id }, '', url);
+    }
   });
 
   card.querySelector('.recipe-save-btn').addEventListener('click', function(e) {
+    e.preventDefault();
     e.stopPropagation();
     var btn = e.currentTarget;
     btn.classList.toggle('saved');
@@ -101,7 +115,7 @@ function renderCuisines() {
     var bgColor = c.color || '#1A1A18';
     card.style.background = 'linear-gradient(145deg, ' + bgColor + '33, ' + bgColor + '11)';
     card.innerHTML =
-      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem;opacity:0.35">' + c.flag + '</div>' +
+      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:6.5rem;opacity:0.55;filter:saturate(1.3)">' + c.flag + '</div>' +
       '<div class="cuisine-card-overlay">' +
         '<div class="cuisine-flag">' + c.flag + '</div>' +
         '<div class="cuisine-name">' + c.name + '</div>' +
@@ -165,18 +179,57 @@ function renderBadges() {
 }
 
 // ── Leaderboard ──────────────────────────
-function renderLeaderboard() {
+async function renderLeaderboard() {
   var wrap = document.getElementById('leaderboard');
   if (!wrap) return;
+  wrap.innerHTML = '<div class="lb-header"><i class="ti ti-trophy"></i><span>Weekly Leaderboard</span></div><div class="dash-loading">Loading…</div>';
+
+  var sb = (typeof getSupabase === 'function') ? getSupabase() : null;
+  if (!sb) { wrap.innerHTML = '<div class="lb-header"><i class="ti ti-trophy"></i><span>Weekly Leaderboard</span></div>'; return; }
+
+  var results = await Promise.all([
+    sb.from('community_posts').select('id, user_id, author_name, author_avatar'),
+    sb.from('post_likes').select('post_id'),
+    sb.from('challenge_entries').select('user_id')
+  ]);
+  var posts = results[0].data, likes = results[1].data, entries = results[2].data;
+
   wrap.innerHTML = '<div class="lb-header"><i class="ti ti-trophy"></i><span>Weekly Leaderboard</span></div>';
-  LEADERBOARD.forEach(function(entry) {
-    var rankClass = entry.rank === 1 ? 'gold' : entry.rank === 2 ? 'silver' : entry.rank === 3 ? 'bronze' : '';
-    var rankIcon  = entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : entry.rank;
+
+  if (!posts || posts.length === 0) {
+    wrap.innerHTML += '<div style="padding:1.5rem 1rem;text-align:center;color:var(--text-muted);font-size:13px">No activity yet — be the first to share a recipe.</div>';
+    return;
+  }
+
+  // Same scoring as the full community leaderboard: posts + likes + challenge entries
+  var likesPerPost = {};
+  (likes || []).forEach(function (l) { likesPerPost[l.post_id] = (likesPerPost[l.post_id] || 0) + 1; });
+
+  var byUser = {};
+  posts.forEach(function (p) {
+    if (!byUser[p.user_id]) byUser[p.user_id] = { name: p.author_name, emoji: null, avatar: p.author_avatar, postCount: 0, likeCount: 0, entryCount: 0 };
+    byUser[p.user_id].postCount++;
+    byUser[p.user_id].likeCount += likesPerPost[p.id] || 0;
+  });
+  (entries || []).forEach(function (e) { if (byUser[e.user_id]) byUser[e.user_id].entryCount++; });
+
+  var ranked = Object.values(byUser)
+    .map(function (u) { return Object.assign({}, u, { score: u.postCount * 10 + u.likeCount * 2 + u.entryCount * 15 }); })
+    .sort(function (a, b) { return b.score - a.score; })
+    .slice(0, 5);
+
+  ranked.forEach(function (entry, i) {
+    var rank = i + 1;
+    var rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+    var rankIcon  = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank;
+    var avatarHTML = entry.avatar
+      ? '<img src="' + entry.avatar + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
+      : (entry.name || '?').charAt(0).toUpperCase();
     var row = document.createElement('div');
     row.className = 'lb-row';
     row.innerHTML =
       '<div class="lb-rank ' + rankClass + '">' + rankIcon + '</div>' +
-      '<div class="lb-avatar">' + entry.emoji + '</div>' +
+      '<div class="lb-avatar">' + avatarHTML + '</div>' +
       '<div class="lb-name">' + entry.name + '</div>' +
       '<div class="lb-score">' + formatNum(entry.score) + '</div>';
     wrap.appendChild(row);

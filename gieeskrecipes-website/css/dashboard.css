@@ -37,7 +37,7 @@
   flex-shrink: 0;
 }
 .dash-hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
-.dash-hero-info { flex: 1; padding-bottom: 1.25rem; }
+.dash-hero-info { flex: 1; padding-bottom: 1.25rem; min-width: 0; }
 .dash-hero-name {
   font-family: var(--font-display);
   font-size: 1.6rem;
@@ -47,11 +47,34 @@
 }
 .dash-hero-email { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
 .dash-hero-meta  {
-  display: flex; gap: 1.5rem; margin-top: 10px; flex-wrap: wrap;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+  padding-bottom: 1.25rem;
 }
 .dash-hero-stat { text-align: center; }
 .dash-hero-stat-num   { font-size: 1.1rem; font-weight: 700; color: var(--gold); }
 .dash-hero-stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+.dash-hero-back { flex-shrink: 0; }
+
+/* Below ~700px the implicit flex-wrap wasn't predictable — Back, the
+   avatar, and the stats could all land on whichever line had room,
+   producing a jumbled order. Force a deliberate stack instead:
+   Back on its own row at the top, avatar+name together, stats spread
+   full-width beneath, evenly spaced and never wrapping mid-row. */
+@media (max-width: 700px) {
+  .dash-hero-inner { flex-wrap: wrap; align-items: center; }
+  .dash-hero-back  { order: -2; flex-basis: 100%; margin-bottom: .75rem; }
+  .dash-hero-avatar{ order: -1; }
+  .dash-hero-info  { order: -1; padding-bottom: 0; }
+  .dash-hero-meta  {
+    order: 1;
+    flex-basis: 100%;
+    justify-content: space-between;
+    gap: .5rem;
+    margin-top: 1.25rem;
+    padding-bottom: 1.5rem;
+  }
+  .dash-hero-stat { flex: 1; }
+}
 
 /* Dashboard tabs */
 .dash-tabs {
@@ -76,6 +99,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 .dash-tab:hover   { color: var(--text-primary); }
 .dash-tab.active  { color: var(--gold); border-bottom-color: var(--gold); }
@@ -268,6 +292,24 @@
 .saved-empty i    { font-size: 3rem; display: block; margin-bottom: 1rem; color: var(--text-hint); }
 .saved-empty h3   { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 8px; }
 .saved-empty p    { font-size: 13px; line-height: 1.6; max-width: 300px; margin: 0 auto 1.5rem; }
+
+.dash-loading {
+  grid-column: 1/-1;
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.saved-date-badge {
+  font-size: 11px;
+  color: var(--text-hint);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+.saved-date-badge i { font-size: 12px; }
 
 /* ══════════════════════════════════════════
    MEAL PLANNER PAGE
@@ -605,6 +647,6 @@
   .planner-slot { min-height: 50px; }
 }
 @media (max-width: 520px) {
-  .dash-tabs { overflow-x: auto; }
+  .dash-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .dash-tab  { white-space: nowrap; padding: 10px 14px; }
 }

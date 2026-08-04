@@ -2,90 +2,10 @@
    GIEESKRECIPES — Community System
 ═══════════════════════════════════════════ */
 
-// ── Community data ────────────────────────
-const COMMUNITY_POSTS = [
-  {
-    id: 1,
-    authorName: 'Mama Wanjiru',
-    authorEmoji: '👩🏿‍🍳',
-    authorRole: 'chef',
-    country: '🇰🇪 Kenya',
-    time: '2 hours ago',
-    text: 'Just perfected my White Ugali recipe after 30 years of cooking. The secret is in the flour — always freshly milled, always gradual. Sharing it with the GieesK Recipes community today! 🫓',
-    recipe: { id: 'KEN001', title: 'White Ugali', emoji: '🫓', cuisine: 'Kenyan', time: 17, cal: 210 },
-    tags: ['kenyan', 'staple', 'vegan', 'gluten-free'],
-    likes: 284, comments: 42, shares: 31, liked: false,
-  },
-  {
-    id: 2,
-    authorName: 'Brian Karani',
-    authorEmoji: '👨🏿‍🍳',
-    authorRole: 'community',
-    country: '🇰🇪 Kenya',
-    time: '5 hours ago',
-    text: 'Made Sukuma Wiki for the first time using Mama Wanjiru\'s recipe and it came out perfectly vibrant green! The key tip about not overcooking really works. My family loved it 🥬❤️',
-    recipe: { id: 'KEN002', title: 'Sukuma Wiki', emoji: '🥬', cuisine: 'Kenyan', time: 22, cal: 95 },
-    tags: ['sukumawiki', 'kenyanfood', 'madeithappen'],
-    likes: 97, comments: 18, shares: 7, liked: false,
-  },
-  {
-    id: 3,
-    authorName: 'Fatima El-Amin',
-    authorEmoji: '👩🏽‍🍳',
-    authorRole: 'chef',
-    country: '🇲🇦 Morocco',
-    time: '1 day ago',
-    text: 'My Saffron Lamb Tagine has been making kitchens smell incredible across 12 countries this week. To everyone who made it — don\'t rush the braise. 90 minutes is not negotiable 😄🍲',
-    recipe: { id: 1, title: 'Saffron Lamb Tagine', emoji: '🍲', cuisine: 'Moroccan', time: 90, cal: 520 },
-    tags: ['moroccan', 'tagine', 'slowcooked', 'halal'],
-    likes: 412, comments: 67, shares: 89, liked: false,
-  },
-  {
-    id: 4,
-    authorName: 'Priya Sharma',
-    authorEmoji: '👩🏾‍🍳',
-    authorRole: 'chef',
-    country: '🇮🇳 India',
-    time: '2 days ago',
-    text: 'Butter Chicken is loved worldwide but so few people know the charred edges are the entire point. Don\'t skip the grill step — that smokiness is the soul of the dish 🍛🔥',
-    recipe: { id: 5, title: 'Butter Chicken', emoji: '🍛', cuisine: 'Indian', time: 50, cal: 560 },
-    tags: ['indian', 'butterchicken', 'chefstips'],
-    likes: 631, comments: 94, shares: 145, liked: false,
-  },
-];
-
-const CHALLENGES = [
-  {
-    id: 1,
-    icon: '🇰🇪',
-    title: 'East African Cook-Off',
-    deadline: 'Ends in 5 days',
-    desc: 'Cook any traditional East African recipe, share your photo and story. Best presentation and cultural authenticity wins.',
-    entries: 143,
-    prize: '🏆 Featured Chef badge + Homepage feature',
-    tag: 'eastafrica',
-  },
-  {
-    id: 2,
-    icon: '🌱',
-    title: 'Vegan World Tour',
-    deadline: 'Ends in 12 days',
-    desc: 'Share a vegan recipe from any country in the world. Judges will score on creativity, nutrition, and cultural authenticity.',
-    entries: 289,
-    prize: '🥇 Gold Chef badge + Recipe book feature',
-    tag: 'veganworldtour',
-  },
-  {
-    id: 3,
-    icon: '⚡',
-    title: '20-Minute Challenge',
-    deadline: 'Ends in 3 days',
-    desc: 'Share a delicious meal you can make in under 20 minutes. Speed, flavour, and simplicity are the judging criteria.',
-    entries: 512,
-    prize: '⚡ Speed Cook badge + Weekly spotlight',
-    tag: '20minchallenge',
-  },
-];
+// Community feed, likes, comments, and challenges now come from real
+// Supabase tables (community_posts, post_likes, post_comments,
+// challenges, challenge_entries — see supabase/community.sql), not
+// hardcoded arrays. Everything below reads/writes those tables live.
 
 // ── Open community page ───────────────────
 function openCommunity() {
@@ -103,10 +23,9 @@ function openCommunity() {
   }
   page.style.display = 'block';
 
-  // Build feed on first open
-  setTimeout(() => {
-    if (!document.getElementById('communityFeed')?.dataset.built) buildFeed();
-  }, 50);
+  // Fetch fresh feed every time the page opens — was gated to build once
+  // per session, meaning new posts/likes from elsewhere never showed up.
+  setTimeout(() => { buildFeed(); loadSidebarChallenges(); loadCommunityMemberCount(); }, 50);
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -143,10 +62,10 @@ function buildCommunityPage() {
           </button>
         </div>
         <div class="community-hero-stats">
-          <div><div class="community-hero-stat-num">1.2M</div><div class="community-hero-stat-label">Members</div></div>
-          <div><div class="community-hero-stat-num">50K+</div><div class="community-hero-stat-label">Recipes</div></div>
-          <div><div class="community-hero-stat-num">195</div><div class="community-hero-stat-label">Countries</div></div>
-          <div><div class="community-hero-stat-num">2,400</div><div class="community-hero-stat-label">Chefs</div></div>
+          <div><div class="community-hero-stat-num" id="communityMemberCount">—</div><div class="community-hero-stat-label">Members</div></div>
+          <div><div class="community-hero-stat-num">${RECIPES.length}</div><div class="community-hero-stat-label">Recipes</div></div>
+          <div><div class="community-hero-stat-num">${new Set(RECIPES.map(r => r.country).filter(Boolean)).size}</div><div class="community-hero-stat-label">Countries</div></div>
+          <div><div class="community-hero-stat-num">${CHEFS.length}</div><div class="community-hero-stat-label">Chefs</div></div>
         </div>
       </div>
     </div>
@@ -186,18 +105,8 @@ function buildCommunityPage() {
           <!-- Active challenges -->
           <div class="sidebar-widget">
             <div class="sidebar-widget-header"><i class="ti ti-trophy"></i> Active Challenges</div>
-            <div class="sidebar-widget-body">
-              ${CHALLENGES.map(c => `
-                <div style="padding:8px 0;border-bottom:1px solid var(--border-dim);cursor:pointer" onclick="switchCommunityTab('challenges')">
-                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-                    <span style="font-size:1.2rem">${c.icon}</span>
-                    <span style="font-size:13px;font-weight:600;color:var(--text-primary)">${c.title}</span>
-                  </div>
-                  <div style="display:flex;justify-content:space-between">
-                    <span style="font-size:11px;color:var(--text-muted)">${c.entries} entries</span>
-                    <span style="font-size:11px;color:var(--coral)">${c.deadline}</span>
-                  </div>
-                </div>`).join('')}
+            <div class="sidebar-widget-body" id="sidebarChallenges">
+              <div style="font-size:12px;color:var(--text-muted);padding:8px 0">Loading…</div>
               <button class="btn-ghost" style="width:100%;justify-content:center;margin-top:10px;font-size:13px" onclick="switchCommunityTab('challenges')">
                 View all challenges <i class="ti ti-arrow-right"></i>
               </button>
@@ -266,7 +175,7 @@ function buildCommunityPage() {
           </div>
           <div id="uploadError" style="font-size:13px;color:#F08060;display:none"></div>
           <div style="display:flex;gap:10px">
-            <button class="btn-gold" style="flex:1;justify-content:center;padding:13px" onclick="submitCommunityPost()">
+            <button class="btn-gold" id="uploadSubmitBtn" style="flex:1;justify-content:center;padding:13px" onclick="submitCommunityPost()">
               <i class="ti ti-send"></i> Share Recipe
             </button>
             <button class="btn-ghost" onclick="closeUploadModal()">Cancel</button>
@@ -279,7 +188,7 @@ function buildCommunityPage() {
 }
 
 // ── Tab switching ─────────────────────────
-function switchCommunityTab(tab) {
+function switchCommunityTab(tab, skipBuild) {
   document.querySelectorAll('.community-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.tab === tab);
   });
@@ -287,19 +196,22 @@ function switchCommunityTab(tab) {
     const el = document.getElementById(`community-tab-${t}`);
     if (el) el.style.display = t === tab ? '' : 'none';
   });
-  if (tab === 'feed'        && !document.getElementById('communityFeed').dataset.built) buildFeed();
-  if (tab === 'challenges'  && !document.getElementById('community-tab-challenges').dataset.built) buildChallengesTab();
-  if (tab === 'chefs'       && !document.getElementById('community-tab-chefs').dataset.built) buildChefsTab();
-  if (tab === 'leaderboard' && !document.getElementById('community-tab-leaderboard').dataset.built) buildLeaderboardTab();
+  if (skipBuild) return;
+  // Always rebuild — these panels show live data (posts, likes,
+  // comments, challenge entries) that can change elsewhere during the
+  // same session. Gating on "build once" meant the tab kept showing
+  // whatever it looked like the first time it was opened.
+  if (tab === 'feed')        buildFeed();
+  if (tab === 'challenges')  buildChallengesTab();
+  if (tab === 'chefs')       buildChefsTab();
+  if (tab === 'leaderboard') buildLeaderboardTab();
 }
 
-// ── Build Feed ────────────────────────────
-function buildFeed() {
+// ── Build Feed — real data from Supabase ──
+async function buildFeed() {
   const feed = document.getElementById('communityFeed');
   if (!feed) return;
-  feed.dataset.built = 'true';
 
-  // Update upload prompt avatar
   if (currentUser) {
     const av = document.getElementById('uploadPromptAvatar');
     const avatar = currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
@@ -307,37 +219,76 @@ function buildFeed() {
     if (av) av.innerHTML = avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : name.charAt(0).toUpperCase();
   }
 
-  feed.innerHTML = COMMUNITY_POSTS.map((post, idx) => buildPostHTML(post, idx)).join('');
+  feed.innerHTML = '<div class="dash-loading">Loading the feed…</div>';
+
+  const sb = getSupabase();
+  if (!sb) { feed.innerHTML = '<div class="dash-loading">Community feed unavailable.</div>'; return; }
+
+  const { data: posts, error } = await sb
+    .from('community_posts')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error('[GieesK] community_posts query failed — has supabase/community.sql been run?', error);
+    feed.innerHTML = '<div class="dash-loading">Couldn\'t load the feed. Please try again shortly.</div>';
+    return;
+  }
+
+  if (!posts || posts.length === 0) {
+    feed.innerHTML = `<div class="saved-empty"><i class="ti ti-users"></i><h3>No posts yet</h3><p>Be the first to share a recipe with the community.</p></div>`;
+    return;
+  }
+
+  const postIds = posts.map(p => p.id);
+
+  // Batch-fetch likes and comments for ALL visible posts in two queries
+  // total, rather than one query per post (N+1) — then aggregate client-side.
+  const [{ data: likes }, { data: comments }] = await Promise.all([
+    sb.from('post_likes').select('post_id, user_id').in('post_id', postIds),
+    sb.from('post_comments').select('post_id').in('post_id', postIds)
+  ]);
+
+  const likeCounts = {}, likedByMe = {}, commentCounts = {};
+  (likes || []).forEach(l => {
+    likeCounts[l.post_id] = (likeCounts[l.post_id] || 0) + 1;
+    if (currentUser && l.user_id === currentUser.id) likedByMe[l.post_id] = true;
+  });
+  (comments || []).forEach(c => { commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1; });
+
+  feed.innerHTML = posts.map((post, idx) => buildPostHTML(post, idx, {
+    likes: likeCounts[post.id] || 0,
+    liked: !!likedByMe[post.id],
+    comments: commentCounts[post.id] || 0
+  })).join('');
 }
 
-function buildPostHTML(post, idx) {
-  const tagsHTML = post.tags.map(t => `<span class="badge badge-emerald">#${t}</span>`).join('');
-  const recipeHTML = post.recipe ? `
-    <div class="post-recipe-card" onclick="openRecipeModal(RECIPES.find(r=>r.id===${JSON.stringify(post.recipe.id)}))">
-      <span class="post-recipe-emoji">${post.recipe.emoji}</span>
+function buildPostHTML(post, idx, counts) {
+  counts = counts || { likes: 0, liked: false, comments: 0 };
+  const tagsHTML = (post.tags || []).map(t => `<span class="badge badge-emerald">#${t}</span>`).join('');
+  const recipeHTML = post.recipe_title ? `
+    <div class="post-recipe-card" onclick="${post.recipe_id ? `openRecipeModalById('${post.recipe_id}')` : ''}">
+      <span class="post-recipe-emoji">${post.recipe_emoji || '🍽'}</span>
       <div>
-        <div class="post-recipe-title">${post.recipe.title}</div>
-        <div class="post-recipe-meta">${post.recipe.cuisine} · ${post.recipe.time}min · ${post.recipe.cal} kcal</div>
+        <div class="post-recipe-title">${post.recipe_title}</div>
+        <div class="post-recipe-meta">${post.recipe_cuisine || ''} · ${post.recipe_time || '?'}min · ${post.recipe_cal || '?'} kcal</div>
       </div>
-      <i class="ti ti-arrow-right" style="margin-left:auto;color:var(--text-muted)"></i>
+      ${post.recipe_id ? '<i class="ti ti-arrow-right" style="margin-left:auto;color:var(--text-muted)"></i>' : ''}
     </div>` : '';
+
+  const avatarHTML = post.author_avatar
+    ? `<img src="${post.author_avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+    : (post.author_name || '?').charAt(0).toUpperCase();
 
   return `
     <div class="community-post" id="post-${post.id}" style="animation-delay:${idx*80}ms">
       <div class="post-header">
-        <div class="post-avatar">${post.authorEmoji}</div>
+        <div class="post-avatar">${avatarHTML}</div>
         <div>
-          <div class="post-author-name">
-            ${post.authorName}
-            ${post.authorRole === 'chef' ? '<span class="post-chef-badge">CHEF</span>' : ''}
-          </div>
-          <div class="post-author-meta">
-            <span>${post.country}</span>
-            <span>·</span>
-            <span>${post.time}</span>
-          </div>
+          <div class="post-author-name">${post.author_name}</div>
+          <div class="post-author-meta"><span>${timeAgo(post.created_at)}</span></div>
         </div>
-        <span class="post-time"></span>
       </div>
       <div class="post-body">
         <p class="post-text">${post.text}</p>
@@ -345,95 +296,306 @@ function buildPostHTML(post, idx) {
         <div class="post-tags">${tagsHTML}</div>
       </div>
       <div class="post-actions">
-        <button class="post-action-btn ${post.liked ? 'liked' : ''}" id="like-${post.id}" onclick="toggleLike(${post.id})">
-          <i class="ti ti-heart${post.liked ? '-filled' : ''}"></i> <span id="like-count-${post.id}">${post.likes}</span>
+        <button class="post-action-btn ${counts.liked ? 'liked' : ''}" id="like-${post.id}" onclick="toggleLike('${post.id}')">
+          <i class="ti ti-heart${counts.liked ? '-filled' : ''}"></i> <span id="like-count-${post.id}">${counts.likes}</span>
         </button>
-        <button class="post-action-btn" onclick="focusComment(${post.id})">
-          <i class="ti ti-message-circle"></i> ${post.comments}
+        <button class="post-action-btn" onclick="focusComment('${post.id}')">
+          <i class="ti ti-message-circle"></i> <span id="comment-count-${post.id}">${counts.comments}</span>
         </button>
-        <button class="post-action-btn" onclick="sharePost(${post.id})">
-          <i class="ti ti-share"></i> ${post.shares}
+        <button class="post-action-btn" onclick="sharePost('${post.id}')">
+          <i class="ti ti-share"></i>
         </button>
-        <button class="post-action-btn" onclick="savePostRecipe(${post.id})" style="margin-left:auto">
-          <i class="ti ti-bookmark"></i> Save
-        </button>
+        ${post.recipe_id ? `<button class="post-action-btn" onclick="saveRecipe('${post.recipe_id}')" style="margin-left:auto"><i class="ti ti-bookmark"></i> Save</button>` : ''}
+      </div>
+      <div class="post-comments" id="comments-${post.id}" style="display:none">
+        <div class="post-comments-list" id="comments-list-${post.id}"></div>
+        <div class="post-comment-input-row">
+          <input class="shopping-add-input" id="comment-input-${post.id}" placeholder="Write a comment…"
+                 onkeydown="if(event.key==='Enter') submitComment('${post.id}')" />
+          <button class="btn-gold" style="padding:8px 16px" onclick="submitComment('${post.id}')">Post</button>
+        </div>
       </div>
     </div>`;
 }
 
-function toggleLike(postId) {
+function openRecipeModalById(id) {
+  const r = RECIPES.find(x => String(x.id) === String(id));
+  if (r) openRecipeModal(r);
+}
+
+async function toggleLike(postId) {
   if (!currentUser) { openAuthModal('login'); return; }
-  const post = COMMUNITY_POSTS.find(p => p.id === postId);
-  if (!post) return;
-  post.liked = !post.liked;
-  post.likes += post.liked ? 1 : -1;
+  const sb = getSupabase();
+  if (!sb) return;
+
   const btn   = document.getElementById(`like-${postId}`);
   const count = document.getElementById(`like-count-${postId}`);
-  if (btn)   btn.className   = `post-action-btn ${post.liked ? 'liked' : ''}`;
-  if (btn)   btn.querySelector('i').className = `ti ti-heart${post.liked ? '-filled' : ''}`;
-  if (count) count.textContent = post.likes;
+  const isLiked = btn?.classList.contains('liked');
+
+  // Optimistic UI update — feels instant, corrected below if the write fails
+  if (btn && count) {
+    btn.classList.toggle('liked', !isLiked);
+    btn.querySelector('i').className = `ti ti-heart${!isLiked ? '-filled' : ''}`;
+    count.textContent = Math.max(0, parseInt(count.textContent, 10) + (isLiked ? -1 : 1));
+  }
+
+  const result = isLiked
+    ? await sb.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id)
+    : await sb.from('post_likes').insert({ post_id: postId, user_id: currentUser.id });
+
+  if (result.error) {
+    console.error('[GieesK] like toggle failed:', result.error);
+    // Revert the optimistic update
+    if (btn && count) {
+      btn.classList.toggle('liked', isLiked);
+      btn.querySelector('i').className = `ti ti-heart${isLiked ? '-filled' : ''}`;
+      count.textContent = Math.max(0, parseInt(count.textContent, 10) + (isLiked ? 1 : -1));
+    }
+  }
 }
 
-function focusComment(postId) {
+async function focusComment(postId) {
   if (!currentUser) { openAuthModal('login'); return; }
-  alert('Comments coming in the next update!');
-}
-function sharePost(postId) { navigator.clipboard?.writeText(window.location.href).then(() => alert('Link copied!')); }
-function savePostRecipe(postId) {
-  const post = COMMUNITY_POSTS.find(p => p.id === postId);
-  if (post?.recipe) saveRecipe(post.recipe.id);
+  const box = document.getElementById(`comments-${postId}`);
+  if (!box) return;
+  const opening = box.style.display === 'none';
+  box.style.display = opening ? '' : 'none';
+  if (opening) {
+    await loadComments(postId);
+    document.getElementById(`comment-input-${postId}`)?.focus();
+  }
 }
 
-function filterFeedByTag(tag) {
-  switchCommunityTab('feed');
-  if (!document.getElementById('communityFeed').dataset.built) buildFeed();
-  const posts = document.querySelectorAll('.community-post');
-  posts.forEach(p => {
-    const pid = parseInt(p.id.replace('post-',''));
-    const post = COMMUNITY_POSTS.find(x => x.id === pid);
-    p.style.display = (!tag || post?.tags.includes(tag)) ? '' : 'none';
+async function loadComments(postId) {
+  const sb = getSupabase();
+  const list = document.getElementById(`comments-list-${postId}`);
+  if (!sb || !list) return;
+  const { data } = await sb.from('post_comments').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+  list.innerHTML = (data || []).map(c => `
+    <div class="post-comment">
+      <strong>${c.author_name}</strong>
+      <span>${c.text}</span>
+      <span class="post-comment-time">${timeAgo(c.created_at)}</span>
+    </div>`).join('') || '<p style="font-size:12px;color:var(--text-muted)">No comments yet — be the first.</p>';
+}
+
+async function submitComment(postId) {
+  if (!currentUser) { openAuthModal('login'); return; }
+  const input = document.getElementById(`comment-input-${postId}`);
+  const text = input?.value.trim();
+  if (!text) return;
+  const sb = getSupabase();
+  if (!sb) return;
+
+  const name = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'You';
+  const { error } = await sb.from('post_comments').insert({ post_id: postId, user_id: currentUser.id, author_name: name, text });
+  if (error) { console.error('[GieesK] comment failed:', error); return; }
+
+  input.value = '';
+  await loadComments(postId);
+  const countEl = document.getElementById(`comment-count-${postId}`);
+  if (countEl) countEl.textContent = parseInt(countEl.textContent, 10) + 1;
+}
+
+function sharePost(postId) {
+  const url = window.location.origin + '/#community';
+  navigator.clipboard?.writeText(url).then(() => alert('Link copied!'));
+}
+
+async function filterFeedByTag(tag) {
+  switchCommunityTab('feed', true);   // true = skip the default rebuild, we're doing our own fetch below
+  if (!tag) { buildFeed(); return; }  // no tag = show everything, unfiltered
+
+  const feed = document.getElementById('communityFeed');
+  const sb = getSupabase();
+  if (!feed || !sb) return;
+
+  feed.innerHTML = '<div class="dash-loading">Loading…</div>';
+  const { data: posts, error } = await sb
+    .from('community_posts')
+    .select('*')
+    .contains('tags', [tag])
+    .order('created_at', { ascending: false });
+
+  if (error || !posts || posts.length === 0) {
+    feed.innerHTML = `<div class="saved-empty"><i class="ti ti-hash"></i><h3>No posts tagged #${tag}</h3><p>Be the first to use this tag.</p></div>`;
+    return;
+  }
+
+  const postIds = posts.map(p => p.id);
+  const [{ data: likes }, { data: comments }] = await Promise.all([
+    sb.from('post_likes').select('post_id, user_id').in('post_id', postIds),
+    sb.from('post_comments').select('post_id').in('post_id', postIds)
+  ]);
+  const likeCounts = {}, likedByMe = {}, commentCounts = {};
+  (likes || []).forEach(l => {
+    likeCounts[l.post_id] = (likeCounts[l.post_id] || 0) + 1;
+    if (currentUser && l.user_id === currentUser.id) likedByMe[l.post_id] = true;
   });
+  (comments || []).forEach(c => { commentCounts[c.post_id] = (commentCounts[c.post_id] || 0) + 1; });
+
+  feed.innerHTML = posts.map((post, idx) => buildPostHTML(post, idx, {
+    likes: likeCounts[post.id] || 0, liked: !!likedByMe[post.id], comments: commentCounts[post.id] || 0
+  })).join('');
 }
 
 // ── Build Challenges tab ──────────────────
-function buildChallengesTab() {
+// "Ends in 5 days" computed from a real stored deadline — not typed by
+// hand and frozen forever like the old hardcoded version was.
+function formatDeadline(iso) {
+  if (!iso) return '';
+  const ms = new Date(iso).getTime() - Date.now();
+  if (ms <= 0) return 'Ended';
+  const days = Math.floor(ms / 86400000);
+  if (days >= 1) return `Ends in ${days} day${days > 1 ? 's' : ''}`;
+  const hours = Math.floor(ms / 3600000);
+  if (hours >= 1) return `Ends in ${hours} hour${hours > 1 ? 's' : ''}`;
+  return 'Ending soon';
+}
+
+// A real count from the profiles table (one row per signed-up user).
+// Falls back to hiding the stat entirely rather than showing a made-up
+// number if RLS on that table doesn't allow this — safer than guessing.
+async function loadCommunityMemberCount() {
+  const el = document.getElementById('communityMemberCount');
+  if (!el) return;
+  const sb = getSupabase();
+  if (!sb) return;
+
+  const { count, error } = await sb.from('profiles').select('*', { count: 'exact', head: true });
+
+  if (error || count == null) {
+    console.warn('[GieesK] Member count unavailable (check profiles table RLS allows a public count):', error);
+    el.parentElement.style.display = 'none';  // hide the whole stat rather than show a wrong number
+    return;
+  }
+  el.textContent = formatNum(count);
+}
+
+// Sidebar preview — same challenges table as the main tab, just the
+// nearest 3 by deadline. Kept in sync with the real data instead of
+// the old hardcoded array (which could show a challenge here that had
+// already ended, or hide one that was genuinely live).
+async function loadSidebarChallenges() {
+  const body = document.getElementById('sidebarChallenges');
+  if (!body) return;
+  const sb = getSupabase();
+  if (!sb) return;
+
+  const { data: challenges, error } = await sb
+    .from('challenges').select('*')
+    .gt('deadline', new Date().toISOString())
+    .order('deadline', { ascending: true })
+    .limit(3);
+
+  if (error || !challenges || challenges.length === 0) {
+    body.innerHTML = `<div style="font-size:12px;color:var(--text-muted);padding:8px 0">No active challenges right now.</div>
+      <button class="btn-ghost" style="width:100%;justify-content:center;margin-top:10px;font-size:13px" onclick="switchCommunityTab('challenges')">
+        View all challenges <i class="ti ti-arrow-right"></i>
+      </button>`;
+    return;
+  }
+
+  const ids = challenges.map(c => c.id);
+  const { data: entries } = await sb.from('challenge_entries').select('challenge_id').in('challenge_id', ids);
+  const entryCounts = {};
+  (entries || []).forEach(e => { entryCounts[e.challenge_id] = (entryCounts[e.challenge_id] || 0) + 1; });
+
+  body.innerHTML = challenges.map(c => `
+    <div style="padding:8px 0;border-bottom:1px solid var(--border-dim);cursor:pointer" onclick="switchCommunityTab('challenges')">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:1.2rem">${c.icon || '🏆'}</span>
+        <span style="font-size:13px;font-weight:600;color:var(--text-primary)">${c.title}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="font-size:11px;color:var(--text-muted)">${entryCounts[c.id] || 0} entries</span>
+        <span style="font-size:11px;color:var(--coral)">${formatDeadline(c.deadline)}</span>
+      </div>
+    </div>`).join('') +
+    `<button class="btn-ghost" style="width:100%;justify-content:center;margin-top:10px;font-size:13px" onclick="switchCommunityTab('challenges')">
+      View all challenges <i class="ti ti-arrow-right"></i>
+    </button>`;
+}
+
+async function buildChallengesTab() {
   const panel = document.getElementById('community-tab-challenges');
   if (!panel) return;
-  panel.dataset.built = 'true';
+  panel.innerHTML = '<div class="dash-loading">Loading challenges…</div>';
+
+  const sb = getSupabase();
+  if (!sb) { panel.innerHTML = '<div class="dash-loading">Challenges unavailable.</div>'; return; }
+
+  const { data: challenges, error } = await sb
+    .from('challenges').select('*')
+    .gt('deadline', new Date(Date.now() - 86400000).toISOString())  // hide anything that ended over a day ago
+    .order('deadline', { ascending: true });
+
+  if (error) {
+    console.error('[GieesK] challenges query failed — has supabase/community.sql been run?', error);
+    panel.innerHTML = '<div class="dash-loading">Couldn\'t load challenges.</div>';
+    return;
+  }
+  if (!challenges || challenges.length === 0) {
+    panel.innerHTML = `<div class="saved-empty"><i class="ti ti-trophy"></i><h3>No active challenges right now</h3><p>Check back soon!</p></div>`;
+    return;
+  }
+
+  const ids = challenges.map(c => c.id);
+  const { data: entries } = await sb.from('challenge_entries').select('challenge_id, user_id').in('challenge_id', ids);
+  const entryCounts = {}, enteredByMe = {};
+  (entries || []).forEach(e => {
+    entryCounts[e.challenge_id] = (entryCounts[e.challenge_id] || 0) + 1;
+    if (currentUser && e.user_id === currentUser.id) enteredByMe[e.challenge_id] = true;
+  });
+
   panel.innerHTML = `
     <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--text-primary);margin-bottom:1.25rem">
-      Active Challenges <span style="font-size:13px;color:var(--text-muted);font-family:var(--font-body);font-weight:400">${CHALLENGES.length} running now</span>
+      Active Challenges <span style="font-size:13px;color:var(--text-muted);font-family:var(--font-body);font-weight:400">${challenges.length} running now</span>
     </h2>` +
-    CHALLENGES.map((c, idx) => `
+    challenges.map((c, idx) => {
+      const entered = !!enteredByMe[c.id];
+      return `
     <div class="challenge-card" style="animation-delay:${idx*80}ms">
       <div class="challenge-header">
-        <span class="challenge-icon">${c.icon}</span>
+        <span class="challenge-icon">${c.icon || '🏆'}</span>
         <div>
           <div class="challenge-title">${c.title}</div>
-          <div class="challenge-meta">${c.deadline} · #${c.tag}</div>
+          <div class="challenge-meta">${formatDeadline(c.deadline)} · #${c.tag || ''}</div>
         </div>
         <span class="badge badge-coral" style="margin-left:auto">LIVE</span>
       </div>
       <div class="challenge-body">
-        <p class="challenge-desc">${c.desc}</p>
-        <button class="btn-gold" onclick="enterChallenge(${c.id})">
-          <i class="ti ti-plus"></i> Enter Challenge
+        <p class="challenge-desc">${c.description || ''}</p>
+        <button class="btn-gold" ${entered ? 'disabled' : ''} onclick="enterChallenge('${c.id}')">
+          <i class="ti ${entered ? 'ti-check' : 'ti-plus'}"></i> ${entered ? 'Entered' : 'Enter Challenge'}
         </button>
       </div>
       <div class="challenge-footer">
-        <div class="challenge-entries"><i class="ti ti-users"></i> ${c.entries} entries</div>
-        <div class="challenge-prize">${c.prize}</div>
+        <div class="challenge-entries"><i class="ti ti-users"></i> ${entryCounts[c.id] || 0} entries</div>
+        <div class="challenge-prize">${c.prize || ''}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+    }).join('');
 }
 
-function enterChallenge(id) {
+async function enterChallenge(id) {
   if (!currentUser) { openAuthModal('login'); return; }
+  const sb = getSupabase();
+  if (!sb) return;
+
+  const { data: challenge } = await sb.from('challenges').select('tag').eq('id', id).single();
+
+  const { error } = await sb.from('challenge_entries').insert({ challenge_id: id, user_id: currentUser.id });
+  if (error) {
+    // Unique constraint = already entered — not a real failure, just open
+    // the composer so they can post their entry anyway.
+    if (error.code !== '23505') console.error('[GieesK] challenge entry failed:', error);
+  }
+
   openUploadModal();
-  const challenge = CHALLENGES.find(c => c.id === id);
   if (challenge) {
     const tagsInput = document.getElementById('uploadTags');
-    if (tagsInput) tagsInput.value = challenge.tag;
+    if (tagsInput) tagsInput.value = challenge.tag || '';
   }
 }
 
@@ -442,7 +604,6 @@ function enterChallenge(id) {
 function buildChefsTab() {
   const panel = document.getElementById('community-tab-chefs');
   if (!panel) return;
-  panel.dataset.built = 'true';
 
   panel.innerHTML = `
     <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--text-primary);margin-bottom:1.25rem">
@@ -494,37 +655,66 @@ function followChef(name, btn) {
   btn.style.borderColor = isFollowing ? '' : 'var(--emerald)';
 }
 
-// ── Build Leaderboard tab ─────────────────
-function buildLeaderboardTab() {
+// ── Build Leaderboard tab — real activity, not padding ────────
+// Score = 10 pts/post + 2 pts/like received + 15 pts/challenge entry.
+// Matches the "Earn points by sharing, winning challenges, and getting
+// likes" copy below — previously that copy was true of nothing, since
+// the list below it was hardcoded names with made-up scores.
+async function buildLeaderboardTab() {
   const panel = document.getElementById('community-tab-leaderboard');
   if (!panel) return;
-  panel.dataset.built = 'true';
+  panel.innerHTML = '<div class="dash-loading">Loading leaderboard…</div>';
 
-  const extended = [
-    ...LEADERBOARD,
-    { rank:6,  name:'Layla Nasser',   emoji:'👩🏽‍🍳', score:54200 },
-    { rank:7,  name:'Nong Krai',      emoji:'👨🏻‍🍳', score:47800 },
-    { rank:8,  name:'Brian Karani',   emoji:'👨🏿‍🍳', score:32100 },
-    { rank:9,  name:'James W.',       emoji:'👨🏼‍🍳', score:28900 },
-    { rank:10, name:'Marco B.',       emoji:'👨🏻‍🍳', score:24500 },
-  ];
+  const sb = getSupabase();
+  if (!sb) { panel.innerHTML = '<div class="dash-loading">Leaderboard unavailable.</div>'; return; }
+
+  const [{ data: posts }, { data: likes }, { data: entries }] = await Promise.all([
+    sb.from('community_posts').select('id, user_id, author_name, author_avatar'),
+    sb.from('post_likes').select('post_id'),
+    sb.from('challenge_entries').select('user_id')
+  ]);
+
+  if (!posts || posts.length === 0) {
+    panel.innerHTML = `<div class="saved-empty"><i class="ti ti-trophy"></i><h3>No activity yet</h3><p>Share a recipe to be the first on the leaderboard.</p></div>`;
+    return;
+  }
+
+  // Likes are stored per-post; attribute them to whoever owns that post.
+  const likesPerPost = {};
+  (likes || []).forEach(l => { likesPerPost[l.post_id] = (likesPerPost[l.post_id] || 0) + 1; });
+
+  const byUser = {};
+  posts.forEach(p => {
+    if (!byUser[p.user_id]) byUser[p.user_id] = { name: p.author_name, avatar: p.author_avatar, postCount: 0, likeCount: 0, entryCount: 0 };
+    byUser[p.user_id].postCount++;
+    byUser[p.user_id].likeCount += likesPerPost[p.id] || 0;
+  });
+  (entries || []).forEach(e => {
+    if (byUser[e.user_id]) byUser[e.user_id].entryCount++;
+  });
+
+  const ranked = Object.values(byUser)
+    .map(u => ({ ...u, score: u.postCount * 10 + u.likeCount * 2 + u.entryCount * 15 }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10);
 
   panel.innerHTML = `
     <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;color:var(--text-primary);margin-bottom:1.25rem">
-      Global Leaderboard <span style="font-size:13px;color:var(--text-muted);font-family:var(--font-body);font-weight:400">This week</span>
+      Global Leaderboard <span style="font-size:13px;color:var(--text-muted);font-family:var(--font-body);font-weight:400">All-time activity</span>
     </h2>
     <div class="dash-card">
       <div class="dash-card-header">
-        <span class="dash-card-title"><i class="ti ti-trophy"></i> Top 10 Cooks</span>
-        <span style="font-size:12px;color:var(--text-muted)">Resets every Monday</span>
+        <span class="dash-card-title"><i class="ti ti-trophy"></i> Top ${ranked.length} Cooks</span>
       </div>
       <div>
-        ${extended.map(entry => {
-          const rankIcon = entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : entry.rank === 3 ? '🥉' : `#${entry.rank}`;
-          const rankClass = entry.rank <= 3 ? ['gold','silver','bronze'][entry.rank-1] : '';
-          return `<div class="lb-row" style="${entry.rank <= 3 ? 'background:rgba(201,150,58,0.04)' : ''}">
-            <div class="lb-rank ${rankClass}" style="font-size:${entry.rank<=3?'1.2rem':'12px'}">${rankIcon}</div>
-            <div class="lb-avatar">${entry.emoji}</div>
+        ${ranked.map((entry, i) => {
+          const rank = i + 1;
+          const rankIcon = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+          const rankClass = rank <= 3 ? ['gold','silver','bronze'][rank-1] : '';
+          const avatarHTML = entry.avatar ? `<img src="${entry.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : (entry.name||'?').charAt(0).toUpperCase();
+          return `<div class="lb-row" style="${rank <= 3 ? 'background:rgba(201,150,58,0.04)' : ''}">
+            <div class="lb-rank ${rankClass}" style="font-size:${rank<=3?'1.2rem':'12px'}">${rankIcon}</div>
+            <div class="lb-avatar">${avatarHTML}</div>
             <div class="lb-name">${entry.name}</div>
             <div style="display:flex;gap:8px;align-items:center">
               <div class="lb-score">${formatNum(entry.score)}</div>
@@ -601,11 +791,30 @@ function openChefProfile(index) {
       </div>
     </div>`;
 
-  // Re-wire recipe card clicks since we used outerHTML
+  // outerHTML above drops every listener createRecipeCard() attached
+  // (link click + pushState, save button) — re-wire both here to match
+  // exactly what createRecipeCard() itself does.
   page.querySelectorAll('.recipe-card').forEach(card => {
     const id = card.dataset.id;
     const recipe = RECIPES.find(r => String(r.id) === id);
-    if (recipe) card.addEventListener('click', () => openRecipeModal(recipe));
+    if (!recipe) return;
+
+    const link = card.querySelector('.recipe-card-link');
+    if (link) link.addEventListener('click', (e) => {
+      e.preventDefault();
+      openRecipeModal(recipe);
+      const url = '/recipes/' + recipe.id + '.html';
+      if (location.pathname !== url) history.pushState({ recipeId: recipe.id }, '', url);
+    });
+
+    const saveBtn = card.querySelector('.recipe-save-btn');
+    if (saveBtn) saveBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      saveBtn.classList.toggle('saved');
+      saveBtn.querySelector('i').className = saveBtn.classList.contains('saved') ? 'ti ti-bookmark-filled' : 'ti ti-bookmark';
+      if (typeof saveRecipe === 'function') saveRecipe(recipe.id);
+    });
   });
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -620,11 +829,14 @@ function closeUploadModal() {
   document.getElementById('uploadModalOverlay')?.classList.remove('open');
 }
 
-function submitCommunityPost() {
+async function submitCommunityPost() {
+  if (!currentUser) { openAuthModal('login'); return; }
+
   const title = document.getElementById('uploadTitle')?.value.trim();
   const desc  = document.getElementById('uploadDesc')?.value.trim();
   const cuisine = document.getElementById('uploadCuisine')?.value.trim();
   const err   = document.getElementById('uploadError');
+  const submitBtn = document.getElementById('uploadSubmitBtn');
 
   if (!title || !desc || !cuisine) {
     if (err) { err.textContent = 'Please fill in the recipe name, description, and cuisine.'; err.style.display = ''; }
@@ -632,35 +844,41 @@ function submitCommunityPost() {
   }
   if (err) err.style.display = 'none';
 
+  const sb = getSupabase();
+  if (!sb) return;
+
   const name   = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'You';
-  const avatar = currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
+  const avatar = currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null;
   const tags   = (document.getElementById('uploadTags')?.value || '').split(',').map(t => t.trim()).filter(Boolean);
 
-  // Add to posts array and re-render
-  const newPost = {
-    id: Date.now(),
-    authorName: name,
-    authorEmoji: avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : name.charAt(0),
-    authorRole: 'community',
-    country: '🌍',
-    time: 'Just now',
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Posting…'; }
+
+  const { error } = await sb.from('community_posts').insert({
+    user_id: currentUser.id,
+    author_name: name,
+    author_avatar: avatar,
     text: desc,
-    recipe: { title, emoji: '🍽', cuisine, time: parseInt(document.getElementById('uploadTime')?.value) || 30, cal: parseInt(document.getElementById('uploadCal')?.value) || 300 },
-    tags,
-    likes: 0, comments: 0, shares: 0, liked: false,
-  };
-  COMMUNITY_POSTS.unshift(newPost);
+    recipe_id: null,           // a from-scratch share, not linked to an existing site recipe
+    recipe_title: title,
+    recipe_emoji: '🍽',
+    recipe_cuisine: cuisine,
+    recipe_time: parseInt(document.getElementById('uploadTime')?.value) || null,
+    recipe_cal: parseInt(document.getElementById('uploadCal')?.value) || null,
+    tags
+  });
+
+  if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Share Recipe'; }
+
+  if (error) {
+    console.error('[GieesK] Could not publish post — has supabase/community.sql been run?', error);
+    if (err) { err.textContent = "Couldn't publish your post. Please try again."; err.style.display = ''; }
+    return;
+  }
 
   closeUploadModal();
   switchCommunityTab('feed');
-  const feed = document.getElementById('communityFeed');
-  if (feed) {
-    const postEl = document.createElement('div');
-    postEl.innerHTML = buildPostHTML(newPost, 0);
-    feed.insertBefore(postEl.firstElementChild, feed.firstChild);
-  }
+  buildFeed();   // re-fetch from Supabase so the real, saved post (with its real id) shows up
 
-  // Clear form
   ['uploadTitle','uploadDesc','uploadCuisine','uploadTime','uploadCal','uploadIngredients','uploadSteps','uploadTags'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';

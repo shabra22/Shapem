@@ -54,30 +54,30 @@ function buildDashboardShell() {
     <div class="dash-hero">
       <div class="container">
         <div class="dash-hero-inner">
+          <button class="btn-ghost dash-hero-back" onclick="closeDashboard()">
+            <i class="ti ti-arrow-left"></i> Back
+          </button>
           <div class="dash-hero-avatar" id="dashHeroAvatar">
             ${avatar ? `<img src="${avatar}" alt="${name}">` : initial}
           </div>
           <div class="dash-hero-info">
             <div class="dash-hero-name" id="dashHeroName">${name}</div>
             <div class="dash-hero-email">${email}</div>
-            <div class="dash-hero-meta">
-              <div class="dash-hero-stat">
-                <div class="dash-hero-stat-num" id="statSaved">0</div>
-                <div class="dash-hero-stat-label">Saved</div>
-              </div>
-              <div class="dash-hero-stat">
-                <div class="dash-hero-stat-num" id="statPlanned">0</div>
-                <div class="dash-hero-stat-label">Planned</div>
-              </div>
-              <div class="dash-hero-stat">
-                <div class="dash-hero-stat-num" id="statShopping">0</div>
-                <div class="dash-hero-stat-label">Shopping</div>
-              </div>
+          </div>
+          <div class="dash-hero-meta">
+            <div class="dash-hero-stat">
+              <div class="dash-hero-stat-num" id="statSaved">0</div>
+              <div class="dash-hero-stat-label">Saved</div>
+            </div>
+            <div class="dash-hero-stat">
+              <div class="dash-hero-stat-num" id="statPlanned">0</div>
+              <div class="dash-hero-stat-label">Planned</div>
+            </div>
+            <div class="dash-hero-stat">
+              <div class="dash-hero-stat-num" id="statShopping">0</div>
+              <div class="dash-hero-stat-label">Shopping</div>
             </div>
           </div>
-          <button class="btn-ghost" onclick="closeDashboard()" style="margin-bottom:1.25rem">
-            <i class="ti ti-arrow-left"></i> Back
-          </button>
         </div>
         <!-- Tabs -->
         <div class="dash-tabs">
@@ -113,8 +113,13 @@ function switchDashTab(tab) {
     p.style.display = p.id === 'dash-panel-' + tab ? '' : 'none';
   });
   var panel = document.getElementById('dash-panel-' + tab);
-  if (panel && !panel.dataset.built) {
-    panel.dataset.built = 'true';
+  // Always rebuild — these panels read live data (saved recipes, shopping
+  // list, meal plan) that can change elsewhere in the app during the same
+  // session (e.g. saving a recipe from its modal). A one-time "build once
+  // and cache" gate here meant the tab kept showing whatever it looked
+  // like the FIRST time it was opened, forever, until a hard page reload —
+  // saving something new would never appear without one.
+  if (panel) {
     if (tab === 'profile')  buildProfilePanel(panel);
     if (tab === 'saved')    buildSavedPanel(panel);
     if (tab === 'planner')  buildPlannerPanel(panel);
@@ -329,10 +334,27 @@ function buildSavedPanel(panel) {
   loadSavedRecipes(panel);
 }
 
+// "3 days ago" for the card, exact ISO date in the tooltip for anyone
+// who wants the precise date rather than a relative one.
+function timeAgo(isoString) {
+  if (!isoString) return '';
+  const then = new Date(isoString);
+  const secs = Math.floor((Date.now() - then.getTime()) / 1000);
+  const units = [
+    ['year', 31536000], ['month', 2592000], ['week', 604800],
+    ['day', 86400], ['hour', 3600], ['minute', 60]
+  ];
+  for (const [label, secInUnit] of units) {
+    const n = Math.floor(secs / secInUnit);
+    if (n >= 1) return `${n} ${label}${n > 1 ? 's' : ''} ago`;
+  }
+  return 'Just now';
+}
+
 async function loadSavedRecipes(panel) {
   const sb = getSupabase();
   if (!sb || !currentUser) return;
-  const { data } = await sb.from('saved_recipes').select('recipe_id').eq('user_id', currentUser.id);
+  const { data } = await sb.from('saved_recipes').select('recipe_id, saved_at').eq('user_id', currentUser.id);
   const grid = document.getElementById('savedGrid');
   if (!grid) return;
 
@@ -351,8 +373,13 @@ async function loadSavedRecipes(panel) {
     return;
   }
 
+  const savedAtById = {};
+  data.forEach(d => { savedAtById[d.recipe_id] = d.saved_at; });
+
   const savedIds = data.map(d => d.recipe_id);
-  const savedRecipes = RECIPES.filter(r => savedIds.includes(String(r.id)));
+  const savedRecipes = RECIPES.filter(r => savedIds.includes(String(r.id)))
+    // Most recently saved first — matches what people expect from a "saved" list
+    .sort((a, b) => new Date(savedAtById[String(b.id)] || 0) - new Date(savedAtById[String(a.id)] || 0));
 
   if (savedRecipes.length === 0) {
     grid.innerHTML = `<div class="saved-empty" style="grid-column:1/-1"><i class="ti ti-bookmark"></i><h3>No matching recipes found</h3><p>Your saved recipe IDs don't match current recipes.</p></div>`;
@@ -364,6 +391,19 @@ async function loadSavedRecipes(panel) {
     const card = createRecipeCard(r, i * 60);
     card.dataset.title   = r.title.toLowerCase();
     card.dataset.cuisine = (r.cuisine || '').toLowerCase();
+
+    const savedAt = savedAtById[String(r.id)];
+    if (savedAt) {
+      const body = card.querySelector('.recipe-card-body');
+      if (body) {
+        const badge = document.createElement('div');
+        badge.className = 'saved-date-badge';
+        badge.title = new Date(savedAt).toLocaleString(); // exact date/time on hover
+        badge.innerHTML = '<i class="ti ti-clock"></i> Saved ' + timeAgo(savedAt);
+        body.appendChild(badge);
+      }
+    }
+
     grid.appendChild(card);
   });
 }
@@ -519,18 +559,13 @@ function removeFromPlanner(key) {
 }
 
 // ══════════════════════════════════════════
-// SHOPPING LIST PANEL
+// SHOPPING LIST PANEL — backed by Supabase (shopping_list_items table)
+// Previously this was a hardcoded, in-memory-only demo array that
+// reset on every page load and had no connection to any recipe.
+// See supabase/shopping_list_items.sql for the table this expects.
 // ══════════════════════════════════════════
-let shoppingItems = [
-  { id: 1, name: 'White maize flour', amount: '2 cups', category: 'Grains & Staples', checked: false, recipe: 'White Ugali' },
-  { id: 2, name: 'Collard greens (sukuma wiki)', amount: '500g', category: 'Vegetables', checked: false, recipe: 'Sukuma Wiki' },
-  { id: 3, name: 'Tomatoes', amount: '2 medium', category: 'Vegetables', checked: false, recipe: 'Sukuma Wiki' },
-  { id: 4, name: 'Onion', amount: '1 medium', category: 'Vegetables', checked: false, recipe: 'Sukuma Wiki' },
-  { id: 5, name: 'Garlic', amount: '2 cloves', category: 'Herbs & Spices', checked: false, recipe: 'Sukuma Wiki' },
-];
-let nextShoppingId = 6;
 
-function buildShoppingPanel(panel) {
+async function buildShoppingPanel(panel) {
   panel.innerHTML = `
     <div class="shopping-progress">
       <i class="ti ti-shopping-cart" style="color:var(--gold);font-size:18px"></i>
@@ -560,18 +595,54 @@ function buildShoppingPanel(panel) {
       </button>
     </div>
 
-    <div id="shoppingLists"></div>`;
+    <div id="shoppingLists"><div class="dash-loading">Loading your list…</div></div>`;
 
-  renderShoppingList();
+  await renderShoppingList();
 }
 
-function renderShoppingList() {
+// Single source of truth for "what's in my list right now" — every
+// mutation (toggle/add/delete/clear) re-fetches from Supabase rather
+// than trusting local state, so the UI can never silently drift from
+// what's actually saved.
+async function fetchShoppingItems() {
+  const sb = getSupabase();
+  if (!sb || !currentUser) return [];
+  const { data, error } = await sb
+    .from('shopping_list_items')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('category', { ascending: true })
+    .order('created_at', { ascending: true });
+  if (error) {
+    console.error('[GieesK] shopping_list_items query failed — does the table match supabase/shopping_list_items.sql?', error);
+    return null; // null = real error, distinct from [] = genuinely empty
+  }
+  return data || [];
+}
+
+async function renderShoppingList() {
   const container = document.getElementById('shoppingLists');
   if (!container) return;
 
-  // Group by category
+  const items = await fetchShoppingItems();
+
+  if (items === null) {
+    container.innerHTML = `<div class="saved-empty" style="grid-column:1/-1">
+      <i class="ti ti-alert-triangle"></i><h3>Couldn't load your shopping list</h3>
+      <p>Please try again in a moment.</p></div>`;
+    return;
+  }
+
+  if (items.length === 0) {
+    container.innerHTML = `<div class="saved-empty" style="grid-column:1/-1">
+      <i class="ti ti-shopping-cart"></i><h3>Your shopping list is empty</h3>
+      <p>Add items above, or tap "Shopping List" on any recipe to add its ingredients.</p></div>`;
+    updateShoppingProgress(items);
+    return;
+  }
+
   const cats = {};
-  shoppingItems.forEach(item => {
+  items.forEach(item => {
     const cat = item.category || 'Other';
     if (!cats[cat]) cats[cat] = [];
     cats[cat].push(item);
@@ -582,60 +653,91 @@ function renderShoppingList() {
     'Herbs & Spices': '🌿', 'Dairy': '🥛', 'Fruits': '🍎', 'Other': '🛒'
   };
 
-  container.innerHTML = Object.entries(cats).map(([cat, items]) => `
+  container.innerHTML = Object.entries(cats).map(([cat, catItems]) => `
     <div class="shopping-category">
       <div class="shopping-category-title">
         ${catIcons[cat] || '🛒'} ${cat}
       </div>
-      ${items.map(item => `
+      ${catItems.map(item => `
         <div class="shopping-item ${item.checked ? 'checked' : ''}" id="sitem-${item.id}">
-          <div class="shopping-checkbox" onclick="toggleShoppingItem(${item.id})">
+          <div class="shopping-checkbox" onclick="toggleShoppingItem('${item.id}')">
             ${item.checked ? '<i class="ti ti-check"></i>' : ''}
           </div>
           <span class="shopping-item-name">${item.name}</span>
-          ${item.recipe ? `<span style="font-size:11px;color:var(--text-hint);background:var(--bg-elevated);padding:2px 8px;border-radius:var(--r-full)">${item.recipe}</span>` : ''}
+          ${item.recipe_title ? `<span style="font-size:11px;color:var(--text-hint);background:var(--bg-elevated);padding:2px 8px;border-radius:var(--r-full)">${item.recipe_title}</span>` : ''}
           <span class="shopping-item-amount">${item.amount || ''}</span>
-          <div class="shopping-item-delete" onclick="deleteShoppingItem(${item.id})">
+          <div class="shopping-item-delete" onclick="deleteShoppingItem('${item.id}')">
             <i class="ti ti-trash"></i>
           </div>
         </div>`).join('')}
     </div>`).join('');
 
-  updateShoppingProgress();
+  updateShoppingProgress(items);
 }
 
-function toggleShoppingItem(id) {
-  const item = shoppingItems.find(i => i.id === id);
-  if (item) { item.checked = !item.checked; renderShoppingList(); }
-}
-
-function deleteShoppingItem(id) {
-  shoppingItems = shoppingItems.filter(i => i.id !== id);
+async function toggleShoppingItem(id) {
+  const sb = getSupabase();
+  if (!sb || !currentUser) return;
+  // Read current state first — need to know whether we're checking or
+  // unchecking, since this is a toggle, not a fixed set.
+  const { data } = await sb.from('shopping_list_items').select('checked').eq('id', id).single();
+  if (!data) return;
+  await sb.from('shopping_list_items').update({ checked: !data.checked }).eq('id', id);
   renderShoppingList();
-  const statEl = document.getElementById('statShopping');
-  if (statEl) statEl.textContent = shoppingItems.filter(i => !i.checked).length;
 }
 
-function addShoppingItem() {
+async function deleteShoppingItem(id) {
+  const sb = getSupabase();
+  if (!sb || !currentUser) return;
+  await sb.from('shopping_list_items').delete().eq('id', id);
+  renderShoppingList();
+}
+
+async function addShoppingItem() {
   const nameEl   = document.getElementById('shoppingNewItem');
   const amountEl = document.getElementById('shoppingNewAmount');
   const name = nameEl?.value.trim();
   if (!name) return;
-  shoppingItems.push({ id: nextShoppingId++, name, amount: amountEl?.value.trim() || '', category: 'Other', checked: false });
+  const sb = getSupabase();
+  if (!sb || !currentUser) { openAuthModal('login'); return; }
+
+  await sb.from('shopping_list_items').insert({
+    user_id: currentUser.id,
+    name,
+    amount: amountEl?.value.trim() || '',
+    category: 'Other',
+    checked: false
+  });
   if (nameEl)   nameEl.value   = '';
   if (amountEl) amountEl.value = '';
   renderShoppingList();
-  const statEl = document.getElementById('statShopping');
-  if (statEl) statEl.textContent = shoppingItems.filter(i => !i.checked).length;
 }
 
-function clearChecked()  { shoppingItems = shoppingItems.filter(i => !i.checked); renderShoppingList(); }
-function checkAll()      { shoppingItems.forEach(i => i.checked = true);  renderShoppingList(); }
-function uncheckAll()    { shoppingItems.forEach(i => i.checked = false); renderShoppingList(); }
+async function clearChecked() {
+  const sb = getSupabase();
+  if (!sb || !currentUser) return;
+  await sb.from('shopping_list_items').delete().eq('user_id', currentUser.id).eq('checked', true);
+  renderShoppingList();
+}
 
-function updateShoppingProgress() {
-  const total   = shoppingItems.length;
-  const checked = shoppingItems.filter(i => i.checked).length;
+async function checkAll() {
+  const sb = getSupabase();
+  if (!sb || !currentUser) return;
+  await sb.from('shopping_list_items').update({ checked: true }).eq('user_id', currentUser.id);
+  renderShoppingList();
+}
+
+async function uncheckAll() {
+  const sb = getSupabase();
+  if (!sb || !currentUser) return;
+  await sb.from('shopping_list_items').update({ checked: false }).eq('user_id', currentUser.id);
+  renderShoppingList();
+}
+
+function updateShoppingProgress(items) {
+  items = items || [];
+  const total   = items.length;
+  const checked = items.filter(i => i.checked).length;
   const pct     = total ? Math.round(checked / total * 100) : 0;
   const fill  = document.getElementById('shoppingProgressFill');
   const label = document.getElementById('shoppingProgressLabel');
@@ -644,3 +746,70 @@ function updateShoppingProgress() {
   const statEl = document.getElementById('statShopping');
   if (statEl) statEl.textContent = total - checked;
 }
+
+// ── Called from a recipe's modal: pulls that recipe's real
+// ingredients into the user's shopping list. This is the piece that
+// was missing entirely before — the "Shopping List" button on a
+// recipe only navigated to the (fake, hardcoded) list; it never
+// actually added anything to it.
+async function addRecipeToShoppingList(recipe) {
+  if (!currentUser) { openAuthModal('login'); return false; }
+  const sb = getSupabase();
+  if (!sb) return false;
+
+  const ingredients = (recipe.ingredients || [])
+    .filter(i => !/^\s*\/\//.test(String(i)))          // drop "// section" headers
+    .map(i => String(i).replace(/\s*\((?:see\s+)?[A-Z]{2,4}\d{2,4}\)/gi, '').trim())
+    .filter(Boolean);
+
+  if (!ingredients.length) return false;
+
+  const rows = ingredients.map(line => ({
+    user_id: currentUser.id,
+    name: line,
+    amount: '',
+    category: 'Other',
+    recipe_id: String(recipe.id),
+    recipe_title: recipe.title,
+    checked: false
+  }));
+
+  const { error } = await sb.from('shopping_list_items').insert(rows);
+  if (error) {
+    console.error('[GieesK] Could not add ingredients to shopping list:', error);
+    return false;
+  }
+  return true;
+}
+
+// Called directly by the recipe modal's "Add to Shopping List" button.
+// Wraps addRecipeToShoppingList() with visible feedback on the button
+// itself (mirrors how "Save Recipe" shows "Saved!"), then takes the
+// user to the shopping tab so they immediately see it landed — using
+// the real recipe object stashed on window by renderRecipeModal(),
+// since passing a full ingredients array through an inline onclick
+// attribute isn't practical.
+async function addCurrentRecipeToShoppingList() {
+  const recipe = window._currentModalRecipe;
+  const btn = document.getElementById('modalShoppingBtn');
+  if (!recipe) return;
+
+  if (!currentUser) { openAuthModal('login'); return; }
+
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2"></i> Adding…'; }
+
+  const ok = await addRecipeToShoppingList(recipe);
+
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = ok
+      ? '<i class="ti ti-check"></i> Added!'
+      : '<i class="ti ti-shopping-cart"></i> Add to Shopping List';
+  }
+
+  if (ok) {
+    closeRecipeModal();
+    openDashboard('shopping');
+  }
+}
+

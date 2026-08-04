@@ -132,7 +132,7 @@ fs.writeFileSync(path.join(outDir,'index.json'), indexJson);
 // captured here silently disappears from the live site. If you add a
 // new top-level const to data.js that other scripts depend on, add its
 // name to SITE_GLOBALS below or it won't ship.
-const SITE_GLOBALS = ['COUNTRY_REGISTRY','CUISINES','CHEFS','BADGES','LEADERBOARD','AI_RESPONSES'];
+const SITE_GLOBALS = ['COUNTRY_REGISTRY','CUISINES','CHEFS','BADGES','AI_RESPONSES'];
 const globals = {};
 SITE_GLOBALS.forEach(g => {
   vm.runInContext(`try{__G__=${g};}catch(e){__G__=undefined;}`, sandbox);
@@ -154,6 +154,44 @@ const siteDataJs =
 
 fs.writeFileSync(path.join(__dirname,'js','site-data.js'), siteDataJs);
 console.log(`✅ js/site-data.js written (${SITE_GLOBALS.length - missing.length}/${SITE_GLOBALS.length} globals, ${(siteDataJs.length/1024).toFixed(1)} KB)`);
+
+// ── Keep homepage hero stats honest ──────────────────────────────
+// These were hardcoded placeholders (50,000 recipes, 195 countries,
+// 2,400 chefs — all wildly overstated vs the real 909/11/9) that never
+// updated as recipes were added. Since RECIPES/CHEFS are already loaded
+// here, rewrite the actual figures into index.html on every build — so
+// the hero always matches reality without anyone remembering to hand-edit
+// three numbers whenever recipes are added.
+//
+// "Cooks" is left alone — it's a user/traffic metric, not something
+// derivable from the recipe dataset, so there's no "real" value to sync it to.
+const indexHtmlPath = path.join(__dirname, 'index.html');
+let indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+
+const realCountryCount = new Set(RECIPES.map(r => r.country).filter(Boolean)).size;
+const realChefCount = (globals.CHEFS || []).length;
+
+const statTargets = {
+  Recipes:   RECIPES.length,
+  Countries: realCountryCount,
+  Chefs:     realChefCount
+};
+
+let statsUpdated = 0;
+Object.entries(statTargets).forEach(([label, value]) => {
+  const re = new RegExp(
+    `(<span class="stat-num" data-target=")\\d+("[^>]*>0</span><span class="stat-label">${label}</span>)`
+  );
+  if (re.test(indexHtml)) {
+    indexHtml = indexHtml.replace(re, `$1${value}$2`);
+    statsUpdated++;
+  } else {
+    console.warn(`⚠  Could not find hero stat block for "${label}" — skipped`);
+  }
+});
+
+fs.writeFileSync(indexHtmlPath, indexHtml);
+console.log(`✅ Homepage hero stats synced (${statsUpdated}/3): ${RECIPES.length} recipes, ${realCountryCount} countries, ${realChefCount} chefs`);
 
 // ── Report ──────────────────────────────────────────────────────
 const zlib = require('zlib');

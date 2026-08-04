@@ -42,6 +42,7 @@ function renderRecipeModal(recipe) {
   var modal   = document.getElementById('recipeModal');
   var content = document.getElementById('modalContent');
   if (!modal || !content || !recipe) return;
+  window._currentModalRecipe = recipe;   // used by addCurrentRecipeToShoppingList()
 
   var ingredientsHTML = (recipe.ingredients || []).map(function(ing) {
     return '<div class="ingredient-item">' + ing + '</div>';
@@ -348,8 +349,8 @@ function renderRecipeModal(recipe) {
         '<button class="btn-outline btn-lg" onclick="if(typeof openDashboard===\'function\')openDashboard(\'planner\')">' +
           '<i class="ti ti-calendar"></i> Add to Meal Plan' +
         '</button>' +
-        '<button class="btn-ghost" onclick="if(typeof openDashboard===\'function\')openDashboard(\'shopping\')">' +
-          '<i class="ti ti-shopping-cart"></i> Shopping List' +
+        '<button class="btn-ghost" id="modalShoppingBtn" onclick="addCurrentRecipeToShoppingList()">' +
+          '<i class="ti ti-shopping-cart"></i> Add to Shopping List' +
         '</button>' +
       '</div>' +
     '</div>';
@@ -396,7 +397,7 @@ function renderRecipeModal(recipe) {
     "publisher": {
       "@type": "Organization",
       "name": "GieesK Recipes",
-      "url": "https://gieeskrecipes.netlify.app"
+      "url": "https://gieeskrecipes.pages.dev"
     }
   };
   // Clean undefined values
@@ -413,7 +414,30 @@ function closeRecipeModal() {
   var modal = document.getElementById('recipeModal');
   if (modal) modal.classList.remove('open');
   document.body.style.overflow = '';
+  // If we pushState'd into a recipe URL when opening, restore the
+  // homepage URL on close so the address bar reflects what's on screen.
+  if (location.pathname.indexOf('/recipes/') === 0) {
+    history.pushState(null, '', '/');
+  }
 }
+
+// Keep the modal in sync with browser back/forward. Cards pushState to
+// /recipes/<ID>.html when opened; this closes the modal (or opens the
+// right one) when the user navigates history rather than clicking in-page.
+window.addEventListener('popstate', function (e) {
+  var recipeId = e.state && e.state.recipeId;
+  if (recipeId && window.GieesK && window.GieesK.getRecipe) {
+    window.GieesK.getRecipe(recipeId).then(function (full) {
+      if (typeof openRecipeModal === 'function') openRecipeModal(full);
+    });
+  } else {
+    var modal = document.getElementById('recipeModal');
+    if (modal && modal.classList.contains('open')) {
+      modal.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+  }
+});
 
 function initModals() {
   var mc = document.getElementById('modalClose');
