@@ -319,7 +319,7 @@ function buildSavedPanel(panel) {
         <i class="ti ti-search"></i>
         <input type="text" placeholder="Search saved recipes…" oninput="filterSaved(this.value)" />
       </div>
-      <button class="btn-ghost" onclick="switchDashTab('recipes')" style="white-space:nowrap">
+      <button class="btn-ghost" onclick="closeDashboard();showPage('recipes')" style="white-space:nowrap">
         <i class="ti ti-plus"></i> Add Recipes
       </button>
     </div>
@@ -426,8 +426,16 @@ function filterCollection(col, btn) {
 // MEAL PLANNER PANEL
 // ══════════════════════════════════════════
 let plannerWeekOffset = 0;
-let plannerData = {}; // { 'mon-breakfast': { recipeId, title, emoji }, ... }
+// meal_plans is now a real Supabase table (see supabase/meal_plans.sql) —
+// keyed by absolute calendar date, not a "week offset" that silently
+// meant something different depending on when you looked at it.
+let plannerCache = {};   // 'YYYY-MM-DD-mealslot' -> {recipe_id, recipe_title, recipe_emoji} — populated fresh on every render, never trusted stale
 let pendingSlot = null;
+// Set by addCurrentRecipeToMealPlan() when the user clicks "Add to Meal
+// Plan" on a recipe — the next slot they tap gets this recipe directly,
+// skipping the search picker entirely, instead of the old behavior of
+// just navigating to the planner tab and adding nothing.
+let pendingMealPlanRecipe = null;
 
 function buildPlannerPanel(panel) {
   panel.innerHTML = `
@@ -437,7 +445,8 @@ function buildPlannerPanel(panel) {
       <button class="planner-nav-btn" onclick="shiftWeek(1)"><i class="ti ti-chevron-right"></i></button>
       <button class="btn-ghost" onclick="plannerWeekOffset=0;renderPlanner()" style="margin-left:auto">Today</button>
     </div>
-    <div class="planner-grid" id="plannerGrid"></div>
+    <div id="plannerPendingBanner"></div>
+    <div class="planner-grid" id="plannerGrid"><div class="dash-loading">Loading your plan…</div></div>
     <p style="font-size:12px;color:var(--text-muted);margin-top:1rem;text-align:center">Click any slot to add a recipe to your meal plan</p>
 
     <!-- Recipe picker modal -->
@@ -454,16 +463,51 @@ function buildPlannerPanel(panel) {
       </div>
     </div>`;
 
+  renderPendingBanner();
   renderPlanner();
   buildPickerList();
 }
 
-function renderPlanner() {
+function renderPendingBanner() {
+  const el = document.getElementById('plannerPendingBanner');
+  if (!el) return;
+  if (!pendingMealPlanRecipe) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div style="background:rgba(201,150,58,0.12);border:1px solid var(--border-gold);border-radius:var(--r-md);padding:10px 14px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <span style="font-size:13px;color:var(--text-primary)">${pendingMealPlanRecipe.emoji} Tap a slot below to add <strong>${pendingMealPlanRecipe.title}</strong></span>
+      <button class="btn-ghost" style="font-size:12px;padding:4px 10px" onclick="pendingMealPlanRecipe=null;renderPendingBanner()">Cancel</button>
+    </div>`;
+}
+
+function dateKey(d) { return d.toISOString().slice(0, 10); }   // 'YYYY-MM-DD'
+
+async function fetchPlannerWeek(weekStart) {
+  const sb = getSupabase();
+  if (!sb || !currentUser) return {};
+  const end = new Date(weekStart); end.setDate(weekStart.getDate() + 6);
+  const { data, error } = await sb
+    .from('meal_plans')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .gte('plan_date', dateKey(weekStart))
+    .lte('plan_date', dateKey(end));
+  if (error) {
+    console.error('[GieesK] meal_plans query failed — has supabase/meal_plans.sql been run?', error);
+    return null;
+  }
+  const map = {};
+  (data || []).forEach(row => { map[`${row.plan_date}-${row.meal_slot}`] = row; });
+  return map;
+}
+
+async function renderPlanner() {
   const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const meals = ['Breakfast','Lunch','Dinner','Snack'];
+  const meals = ['breakfast','lunch','dinner','snack'];
+  const mealLabels = { breakfast:'Breakfast', lunch:'Lunch', dinner:'Dinner', snack:'Snack' };
   const today = new Date();
   const weekStart = new Date(today);
   weekStart.setDate(today.getDate() - today.getDay() + 1 + plannerWeekOffset * 7);
+  weekStart.setHours(0,0,0,0);
 
   const label = document.getElementById('plannerWeekLabel');
   if (label) {
@@ -474,7 +518,12 @@ function renderPlanner() {
   const grid = document.getElementById('plannerGrid');
   if (!grid) return;
 
-  // Header row
+  plannerCache = await fetchPlannerWeek(weekStart);
+  if (plannerCache === null) {
+    grid.innerHTML = `<div class="saved-empty" style="grid-column:1/-1"><i class="ti ti-alert-triangle"></i><h3>Couldn't load your meal plan</h3><p>Please try again in a moment.</p></div>`;
+    return;
+  }
+
   let html = `<div class="planner-cell header"></div>`;
   days.forEach((day, i) => {
     const date = new Date(weekStart); date.setDate(weekStart.getDate() + i);
@@ -485,18 +534,18 @@ function renderPlanner() {
     </div>`;
   });
 
-  // Meal rows
   meals.forEach(meal => {
     html += `<div class="planner-cell" style="display:flex;align-items:center;justify-content:center;background:var(--bg-elevated)">
-      <span class="planner-meal-label">${meal}</span>
+      <span class="planner-meal-label">${mealLabels[meal]}</span>
     </div>`;
     days.forEach((day, i) => {
-      const key = `${day.toLowerCase()}-${meal.toLowerCase()}-${plannerWeekOffset}`;
-      const item = plannerData[key];
+      const date = new Date(weekStart); date.setDate(weekStart.getDate() + i);
+      const key = `${dateKey(date)}-${meal}`;
+      const item = plannerCache[key];
       if (item) {
         html += `<div class="planner-cell"><div class="planner-slot filled" onclick="openPicker('${key}')">
           <div class="planner-slot-recipe">
-            <span class="planner-slot-emoji">${item.emoji}</span>${item.title}
+            <span class="planner-slot-emoji">${item.recipe_emoji || ''}</span>${item.recipe_title}
           </div>
           <div class="planner-slot-remove" onclick="event.stopPropagation();removeFromPlanner('${key}')"><i class="ti ti-x"></i></div>
         </div></div>`;
@@ -510,16 +559,22 @@ function renderPlanner() {
 
   grid.innerHTML = html;
 
-  // Update stat
-  const planned = Object.keys(plannerData).filter(k => k.includes(`-${plannerWeekOffset}`)).length;
   const statEl = document.getElementById('statPlanned');
-  if (statEl) statEl.textContent = planned;
+  if (statEl) statEl.textContent = Object.keys(plannerCache).length;
 }
 
 function shiftWeek(dir) { plannerWeekOffset += dir; renderPlanner(); }
 
 function openPicker(slotKey) {
   pendingSlot = slotKey;
+  // A recipe was already chosen via "Add to Meal Plan" on a recipe modal —
+  // skip the search picker and add it directly to whichever slot was tapped.
+  if (pendingMealPlanRecipe) {
+    addToPlanner(pendingMealPlanRecipe.id, pendingMealPlanRecipe.title, pendingMealPlanRecipe.emoji);
+    pendingMealPlanRecipe = null;
+    renderPendingBanner();
+    return;
+  }
   document.getElementById('plannerPicker')?.classList.add('open');
 }
 function closePicker() {
@@ -546,16 +601,48 @@ function filterPicker(q) {
   });
 }
 
-function addToPlanner(recipeId, title, emoji) {
+async function addToPlanner(recipeId, title, emoji) {
   if (!pendingSlot) return;
-  plannerData[pendingSlot] = { recipeId, title, emoji };
+  const sb = getSupabase();
+  if (!sb || !currentUser) { openAuthModal('login'); return; }
+
+  const [plan_date, meal_slot] = [pendingSlot.slice(0, 10), pendingSlot.slice(11)];
+  const { error } = await sb.from('meal_plans').upsert({
+    user_id: currentUser.id,
+    plan_date,
+    meal_slot,
+    recipe_id: String(recipeId),
+    recipe_title: title,
+    recipe_emoji: emoji
+  }, { onConflict: 'user_id,plan_date,meal_slot' });
+
+  if (error) console.error('[GieesK] Could not save meal plan slot:', error);
+
   closePicker();
   renderPlanner();
 }
 
-function removeFromPlanner(key) {
-  delete plannerData[key];
+async function removeFromPlanner(key) {
+  const sb = getSupabase();
+  if (!sb || !currentUser) return;
+  const [plan_date, meal_slot] = [key.slice(0, 10), key.slice(11)];
+  await sb.from('meal_plans').delete()
+    .eq('user_id', currentUser.id).eq('plan_date', plan_date).eq('meal_slot', meal_slot);
   renderPlanner();
+}
+
+// Called directly by the recipe modal's "Add to Meal Plan" button.
+// Previously this button only called openDashboard('planner') — it
+// navigated to the planner but never actually added the recipe
+// anywhere, matching exactly what was reported as broken.
+function addCurrentRecipeToMealPlan() {
+  const recipe = window._currentModalRecipe;
+  if (!recipe) return;
+  if (!currentUser) { openAuthModal('login'); return; }
+
+  pendingMealPlanRecipe = { id: recipe.id, title: recipe.title, emoji: recipe.emoji || '🍽' };
+  if (typeof closeRecipeModal === 'function') closeRecipeModal();
+  openDashboard('planner');
 }
 
 // ══════════════════════════════════════════

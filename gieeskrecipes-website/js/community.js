@@ -614,7 +614,6 @@ function buildChefsTab() {
   const grid = document.getElementById('communityChefGrid');
   if (!grid) return;
 
-  // Build chef cards with "Join Community" CTA for non-joined chefs
   CHEFS.forEach((chef, i) => {
     const card = document.createElement('div');
     card.className = 'chef-card';
@@ -624,35 +623,75 @@ function buildChefsTab() {
       <div class="chef-name">${chef.name}</div>
       <div class="chef-origin"><i class="ti ti-map-pin" style="font-size:11px"></i> ${chef.origin}</div>
       <div class="chef-stats">
-        <div><div class="chef-stat-num">${chef.recipes}</div><div class="chef-stat-label">Recipes</div></div>
-        <div><div class="chef-stat-num">${formatNum(chef.followers)}</div><div class="chef-stat-label">Followers</div></div>
+        <div><div class="chef-stat-num">${getChefRecipeCount(chef.name)}</div><div class="chef-stat-label">Recipes</div></div>
+        <div><div class="chef-stat-num" data-follower-count="${chef.name.replace(/"/g,'&quot;')}">–</div><div class="chef-stat-label">Followers</div></div>
         <div><div class="chef-stat-num">${chef.rating}</div><div class="chef-stat-label">Rating</div></div>
       </div>
       <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">${chef.specialty}</div>
-      <div class="join-community-cta">
-        <i class="ti ti-users"></i>
-        <div class="join-community-cta-text">
-          <div class="join-community-cta-title">Active in Community</div>
-          <div class="join-community-cta-sub">Posting recipes & joining challenges</div>
-        </div>
-        <button class="btn-ghost" style="font-size:12px;padding:5px 12px" onclick="followChef('${chef.name}',this)">
-          Follow
-        </button>
-      </div>`;
+      <button class="btn-ghost" data-follow-btn="${chef.name.replace(/"/g,'&quot;')}" style="width:100%;justify-content:center;font-size:12px;padding:7px 12px" onclick="event.stopPropagation();followChef('${chef.name.replace(/'/g,"\\'")}',this)">
+        Follow
+      </button>`;
     card.addEventListener('click', e => {
       if (e.target.closest('button')) return;
       openChefProfile(i);
     });
     grid.appendChild(card);
   });
+
+  getChefFollowerCounts(CHEFS.map(c => c.name)).then(counts => {
+    Object.keys(counts).forEach(name => {
+      const el = grid.querySelector(`[data-follower-count="${name.replace(/"/g,'\\"')}"]`);
+      if (el) el.textContent = formatNum(counts[name]);
+    });
+  });
+  if (currentUser) {
+    CHEFS.forEach(chef => setFollowButtonState(chef.name));
+  }
 }
 
-function followChef(name, btn) {
+async function followChef(name, btn) {
   if (!currentUser) { openAuthModal('login'); return; }
-  const isFollowing = btn.textContent === 'Following';
-  btn.textContent = isFollowing ? 'Follow' : 'Following';
-  btn.style.color = isFollowing ? '' : 'var(--emerald)';
-  btn.style.borderColor = isFollowing ? '' : 'var(--emerald)';
+  const sb = getSupabase();
+  if (!sb) return;
+
+  const isFollowing = btn.dataset.following === 'true';
+  btn.disabled = true;
+
+  if (isFollowing) {
+    await sb.from('chef_follows').delete().eq('user_id', currentUser.id).eq('chef_name', name);
+  } else {
+    const { error } = await sb.from('chef_follows').insert({ user_id: currentUser.id, chef_name: name });
+    if (error) console.error('[GieesK] Could not follow chef — has supabase/chef_follows.sql been run?', error);
+  }
+
+  btn.disabled = false;
+  applyFollowButtonState(btn, !isFollowing);
+
+  // Refresh the visible follower count next to this button, wherever it is
+  const counts = await getChefFollowerCounts([name]);
+  document.querySelectorAll(`[data-follower-count="${name.replace(/"/g,'\\"')}"]`).forEach(el => {
+    el.textContent = formatNum(counts[name] || 0);
+  });
+}
+
+function applyFollowButtonState(btn, following) {
+  btn.dataset.following = following ? 'true' : 'false';
+  btn.textContent = following ? 'Following' : 'Follow';
+  btn.style.color = following ? 'var(--emerald)' : '';
+  btn.style.borderColor = following ? 'var(--emerald)' : '';
+}
+
+// Checks whether the current user already follows this chef and sets
+// every matching button's initial state accordingly — without this,
+// a returning user would see "Follow" even on chefs they already follow.
+async function setFollowButtonState(chefName) {
+  const buttons = document.querySelectorAll(`[data-follow-btn="${chefName.replace(/"/g,'\\"')}"]`);
+  if (!buttons.length || !currentUser) return;
+  const sb = getSupabase();
+  if (!sb) return;
+  const { data } = await sb.from('chef_follows').select('id')
+    .eq('user_id', currentUser.id).eq('chef_name', chefName).maybeSingle();
+  buttons.forEach(btn => applyFollowButtonState(btn, !!data));
 }
 
 // ── Build Leaderboard tab — real activity, not padding ────────
@@ -755,21 +794,19 @@ function openChefProfile(index) {
               <div class="chef-profile-name">${chef.name} <span class="post-chef-badge" style="font-size:12px;vertical-align:middle">CHEF</span></div>
               <div class="chef-profile-origin"><i class="ti ti-map-pin"></i> ${chef.origin} · ${chef.specialty}</div>
               <div class="chef-profile-stats">
-                <div class="dash-hero-stat"><div class="dash-hero-stat-num">${chef.recipes}</div><div class="dash-hero-stat-label">Recipes</div></div>
-                <div class="dash-hero-stat"><div class="dash-hero-stat-num">${formatNum(chef.followers)}</div><div class="dash-hero-stat-label">Followers</div></div>
+                <div class="dash-hero-stat"><div class="dash-hero-stat-num">${chefRecipes.length}</div><div class="dash-hero-stat-label">Recipes</div></div>
+                <div class="dash-hero-stat"><div class="dash-hero-stat-num" data-follower-count="${chef.name.replace(/"/g,'&quot;')}">–</div><div class="dash-hero-stat-label">Followers</div></div>
                 <div class="dash-hero-stat"><div class="dash-hero-stat-num">${chef.rating} ⭐</div><div class="dash-hero-stat-label">Rating</div></div>
               </div>
               <div class="chef-profile-actions">
-                <button class="btn-gold" onclick="followChef('${chef.name}',this)">Follow</button>
-                <button class="btn-ghost" onclick="openCommunity()"><i class="ti ti-message-circle"></i> Message</button>
+                <button class="btn-gold" data-follow-btn="${chef.name.replace(/"/g,'&quot;')}" onclick="followChef('${chef.name.replace(/'/g,"\\'")}',this)">Follow</button>
               </div>
 
-              <!-- Join Community CTA on chef profile -->
               <div class="join-community-cta" style="max-width:480px">
                 <i class="ti ti-users"></i>
                 <div class="join-community-cta-text">
-                  <div class="join-community-cta-title">${chef.name} is active in the GieesK Recipes Community</div>
-                  <div class="join-community-cta-sub">Sharing recipes · Entering challenges · Inspiring cooks worldwide</div>
+                  <div class="join-community-cta-title">Explore the GieesK Recipes Community</div>
+                  <div class="join-community-cta-sub">Share recipes · Enter challenges · Connect with cooks worldwide</div>
                 </div>
                 <button class="btn-gold" style="padding:8px 16px;font-size:13px" onclick="openCommunity()">
                   Join Community
@@ -816,6 +853,12 @@ function openChefProfile(index) {
       if (typeof saveRecipe === 'function') saveRecipe(recipe.id);
     });
   });
+
+  getChefFollowerCounts([chef.name]).then(counts => {
+    const el = page.querySelector(`[data-follower-count="${chef.name.replace(/"/g,'\\"')}"]`);
+    if (el) el.textContent = formatNum(counts[chef.name] || 0);
+  });
+  setFollowButtonState(chef.name);
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }

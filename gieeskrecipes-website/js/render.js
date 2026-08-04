@@ -132,6 +132,31 @@ function renderCuisines() {
 }
 
 // ── Chefs ────────────────────────────────
+// Real recipe count for a chef — computed from actual RECIPES rather
+// than the static (fake) number that used to live on the CHEFS object.
+function getChefRecipeCount(chefName) {
+  return RECIPES.filter(function (r) { return r.author === chefName; }).length;
+}
+
+// Real follower counts, batched — one query for every chef shown at
+// once rather than one query per card. Returns {chefName: count}.
+// Was previously a static fake number with no connection whatsoever
+// to the "Follow" button, which itself did nothing but toggle text.
+async function getChefFollowerCounts(chefNames) {
+  var counts = {};
+  chefNames.forEach(function (n) { counts[n] = 0; });
+  if (typeof getSupabase !== 'function') return counts;
+  var sb = getSupabase();
+  if (!sb) return counts;
+  var res = await sb.from('chef_follows').select('chef_name').in('chef_name', chefNames);
+  if (res.error) {
+    console.error('[GieesK] chef_follows query failed — has supabase/chef_follows.sql been run?', res.error);
+    return counts;
+  }
+  (res.data || []).forEach(function (row) { counts[row.chef_name] = (counts[row.chef_name] || 0) + 1; });
+  return counts;
+}
+
 function renderChefs() {
   var grid = document.getElementById('chefsGrid');
   if (!grid) return;
@@ -144,15 +169,11 @@ function renderChefs() {
       '<div class="chef-name">' + chef.name + '</div>' +
       '<div class="chef-origin"><i class="ti ti-map-pin" style="font-size:11px"></i> ' + chef.origin + '</div>' +
       '<div class="chef-stats">' +
-        '<div><div class="chef-stat-num">' + chef.recipes + '</div><div class="chef-stat-label">Recipes</div></div>' +
-        '<div><div class="chef-stat-num">' + formatNum(chef.followers) + '</div><div class="chef-stat-label">Followers</div></div>' +
+        '<div><div class="chef-stat-num">' + getChefRecipeCount(chef.name) + '</div><div class="chef-stat-label">Recipes</div></div>' +
+        '<div><div class="chef-stat-num" data-follower-count="' + chef.name.replace(/"/g,'&quot;') + '">–</div><div class="chef-stat-label">Followers</div></div>' +
         '<div><div class="chef-stat-num">' + chef.rating + '</div><div class="chef-stat-label">Rating</div></div>' +
       '</div>' +
-      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">' + chef.specialty + '</div>' +
-      '<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:rgba(29,158,117,0.08);border:1px solid rgba(29,158,117,0.2);border-radius:var(--r-md)">' +
-        '<i class="ti ti-users" style="color:var(--emerald);font-size:14px"></i>' +
-        '<span style="font-size:11px;color:var(--emerald);font-weight:600">Active in Community</span>' +
-      '</div>';
+      '<div style="font-size:11px;color:var(--text-muted);margin-bottom:10px">' + chef.specialty + '</div>';
     card.addEventListener('click', function(e) {
       if (e.target.closest('button')) return;
       if (typeof openCommunity === 'function') openCommunity();
@@ -162,6 +183,13 @@ function renderChefs() {
       }, 200);
     });
     grid.appendChild(card);
+  });
+
+  getChefFollowerCounts(CHEFS.map(function(c){ return c.name; })).then(function(counts) {
+    Object.keys(counts).forEach(function(name) {
+      var el = grid.querySelector('[data-follower-count="' + name.replace(/"/g,'\\"') + '"]');
+      if (el) el.textContent = formatNum(counts[name]);
+    });
   });
 }
 

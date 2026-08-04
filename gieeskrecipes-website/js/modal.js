@@ -346,7 +346,7 @@ function renderRecipeModal(recipe) {
         '<button class="btn-gold btn-lg" onclick="if(typeof saveRecipe===\'function\')saveRecipe(\'' + recipe.id + '\');this.innerHTML=\'<i class=\\\"ti ti-bookmark-filled\\\"></i> Saved!\'">' +
           '<i class="ti ti-bookmark"></i> Save Recipe' +
         '</button>' +
-        '<button class="btn-outline btn-lg" onclick="if(typeof openDashboard===\'function\')openDashboard(\'planner\')">' +
+        '<button class="btn-outline btn-lg" onclick="addCurrentRecipeToMealPlan()">' +
           '<i class="ti ti-calendar"></i> Add to Meal Plan' +
         '</button>' +
         '<button class="btn-ghost" id="modalShoppingBtn" onclick="addCurrentRecipeToShoppingList()">' +
