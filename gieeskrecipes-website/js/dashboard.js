@@ -429,12 +429,27 @@ let plannerWeekOffset = 0;
 // meal_plans is now a real Supabase table (see supabase/meal_plans.sql) —
 // keyed by absolute calendar date, not a "week offset" that silently
 // meant something different depending on when you looked at it.
-let plannerCache = {};   // 'YYYY-MM-DD-mealslot' -> {recipe_id, recipe_title, recipe_emoji} — populated fresh on every render, never trusted stale
-let pendingSlot = null;
+// meal_plans / meal_plan_items — the REAL live schema, confirmed from
+// the original Shapem setup SQL. This is a two-table design, not the
+// single flat table my first attempt assumed:
+//   meal_plans      — one row per week: id, user_id, name, start_date, end_date
+//   meal_plan_items — one row per filled slot: id, plan_id (FK), recipe_id,
+//                     day_of_week (0-6), meal_type, servings
+// No unique constraint exists on meal_plan_items, so "filling an
+// already-filled slot" is handled as an explicit check-then-update-or-
+// insert rather than a database-level upsert.
+//
+// day_of_week convention: 0=Sunday..6=Saturday, matching JS's native
+// Date.getDay() — chosen because nothing in the original schema (just
+// a 0-6 check constraint) specifies an alternative, and this is the
+// one that needs no conversion at the boundary. If your original app
+// used a different convention (e.g. 0=Monday), tell me and I'll adjust.
+let currentPlanId = null;     // meal_plans.id for the week currently in view
+let planItemsCache = [];      // raw meal_plan_items rows for currentPlanId
+let pendingSlot = null;       // 'dayOfWeek-mealType', e.g. '1-breakfast'
 // Set by addCurrentRecipeToMealPlan() when the user clicks "Add to Meal
 // Plan" on a recipe — the next slot they tap gets this recipe directly,
-// skipping the search picker entirely, instead of the old behavior of
-// just navigating to the planner tab and adding nothing.
+// skipping the search picker entirely.
 let pendingMealPlanRecipe = null;
 
 function buildPlannerPanel(panel) {
@@ -479,25 +494,46 @@ function renderPendingBanner() {
     </div>`;
 }
 
-function dateKey(d) { return d.toISOString().slice(0, 10); }   // 'YYYY-MM-DD'
+function dateKey(d) { return d.toISOString().slice(0, 10); }
 
-async function fetchPlannerWeek(weekStart) {
+// Monday-start week for display, regardless of the day_of_week storage
+// convention below (0=Sunday) — the two are independent: this just
+// decides which 7 calendar dates the grid currently shows.
+function weekStartFor(offset) {
+  const today = new Date();
+  const d = new Date(today);
+  d.setDate(today.getDate() - ((today.getDay() + 6) % 7) + offset * 7);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+async function getOrCreateWeekPlan(weekStart) {
   const sb = getSupabase();
-  if (!sb || !currentUser) return {};
-  const end = new Date(weekStart); end.setDate(weekStart.getDate() + 6);
-  const { data, error } = await sb
-    .from('meal_plans')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .gte('plan_date', dateKey(weekStart))
-    .lte('plan_date', dateKey(end));
-  if (error) {
-    console.error('[GieesK] meal_plans query failed — has supabase/meal_plans.sql been run?', error);
-    return null;
-  }
-  const map = {};
-  (data || []).forEach(row => { map[`${row.plan_date}-${row.meal_slot}`] = row; });
-  return map;
+  if (!sb || !currentUser) return null;
+  const startStr = dateKey(weekStart);
+
+  const { data: existing, error: selErr } = await sb.from('meal_plans')
+    .select('id').eq('user_id', currentUser.id).eq('start_date', startStr).maybeSingle();
+  if (selErr) { console.error('[GieesK] meal_plans lookup failed:', selErr); return null; }
+  if (existing) return existing.id;
+
+  const end = new Date(weekStart); end.setDate(end.getDate() + 6);
+  const { data: created, error: insErr } = await sb.from('meal_plans').insert({
+    user_id: currentUser.id,
+    name: 'Week of ' + startStr,
+    start_date: startStr,
+    end_date: dateKey(end)
+  }).select('id').single();
+  if (insErr) { console.error('[GieesK] Could not create week plan:', insErr); return null; }
+  return created.id;
+}
+
+async function fetchPlanItems(planId) {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb.from('meal_plan_items').select('*').eq('plan_id', planId);
+  if (error) { console.error('[GieesK] meal_plan_items query failed:', error); return null; }
+  return data || [];
 }
 
 async function renderPlanner() {
@@ -505,9 +541,7 @@ async function renderPlanner() {
   const meals = ['breakfast','lunch','dinner','snack'];
   const mealLabels = { breakfast:'Breakfast', lunch:'Lunch', dinner:'Dinner', snack:'Snack' };
   const today = new Date();
-  const weekStart = new Date(today);
-  weekStart.setDate(today.getDate() - today.getDay() + 1 + plannerWeekOffset * 7);
-  weekStart.setHours(0,0,0,0);
+  const weekStart = weekStartFor(plannerWeekOffset);
 
   const label = document.getElementById('plannerWeekLabel');
   if (label) {
@@ -518,11 +552,19 @@ async function renderPlanner() {
   const grid = document.getElementById('plannerGrid');
   if (!grid) return;
 
-  plannerCache = await fetchPlannerWeek(weekStart);
-  if (plannerCache === null) {
+  currentPlanId = await getOrCreateWeekPlan(weekStart);
+  if (!currentPlanId) {
     grid.innerHTML = `<div class="saved-empty" style="grid-column:1/-1"><i class="ti ti-alert-triangle"></i><h3>Couldn't load your meal plan</h3><p>Please try again in a moment.</p></div>`;
     return;
   }
+  planItemsCache = await fetchPlanItems(currentPlanId);
+  if (planItemsCache === null) {
+    grid.innerHTML = `<div class="saved-empty" style="grid-column:1/-1"><i class="ti ti-alert-triangle"></i><h3>Couldn't load your meal plan</h3><p>Please try again in a moment.</p></div>`;
+    return;
+  }
+
+  const lookup = {};
+  planItemsCache.forEach(item => { lookup[`${item.day_of_week}-${item.meal_type}`] = item; });
 
   let html = `<div class="planner-cell header"></div>`;
   days.forEach((day, i) => {
@@ -540,12 +582,14 @@ async function renderPlanner() {
     </div>`;
     days.forEach((day, i) => {
       const date = new Date(weekStart); date.setDate(weekStart.getDate() + i);
-      const key = `${dateKey(date)}-${meal}`;
-      const item = plannerCache[key];
-      if (item) {
+      const dow = date.getDay();   // 0=Sunday..6=Saturday, matches the DB convention
+      const key = `${dow}-${meal}`;
+      const item = lookup[key];
+      const recipe = item ? RECIPES.find(r => String(r.id) === String(item.recipe_id)) : null;
+      if (item && recipe) {
         html += `<div class="planner-cell"><div class="planner-slot filled" onclick="openPicker('${key}')">
           <div class="planner-slot-recipe">
-            <span class="planner-slot-emoji">${item.recipe_emoji || ''}</span>${item.recipe_title}
+            <span class="planner-slot-emoji">${recipe.emoji || ''}</span>${recipe.title}
           </div>
           <div class="planner-slot-remove" onclick="event.stopPropagation();removeFromPlanner('${key}')"><i class="ti ti-x"></i></div>
         </div></div>`;
@@ -560,15 +604,13 @@ async function renderPlanner() {
   grid.innerHTML = html;
 
   const statEl = document.getElementById('statPlanned');
-  if (statEl) statEl.textContent = Object.keys(plannerCache).length;
+  if (statEl) statEl.textContent = planItemsCache.length;
 }
 
 function shiftWeek(dir) { plannerWeekOffset += dir; renderPlanner(); }
 
 function openPicker(slotKey) {
   pendingSlot = slotKey;
-  // A recipe was already chosen via "Add to Meal Plan" on a recipe modal —
-  // skip the search picker and add it directly to whichever slot was tapped.
   if (pendingMealPlanRecipe) {
     addToPlanner(pendingMealPlanRecipe.id, pendingMealPlanRecipe.title, pendingMealPlanRecipe.emoji);
     pendingMealPlanRecipe = null;
@@ -602,39 +644,42 @@ function filterPicker(q) {
 }
 
 async function addToPlanner(recipeId, title, emoji) {
-  if (!pendingSlot) return;
+  if (!pendingSlot || !currentPlanId) return;
   const sb = getSupabase();
   if (!sb || !currentUser) { openAuthModal('login'); return; }
 
-  const [plan_date, meal_slot] = [pendingSlot.slice(0, 10), pendingSlot.slice(11)];
-  const { error } = await sb.from('meal_plans').upsert({
-    user_id: currentUser.id,
-    plan_date,
-    meal_slot,
-    recipe_id: String(recipeId),
-    recipe_title: title,
-    recipe_emoji: emoji
-  }, { onConflict: 'user_id,plan_date,meal_slot' });
+  const [dow, mealType] = pendingSlot.split('-');
+  const existing = planItemsCache.find(i => String(i.day_of_week) === dow && i.meal_type === mealType);
 
-  if (error) console.error('[GieesK] Could not save meal plan slot:', error);
+  if (existing) {
+    const { error } = await sb.from('meal_plan_items').update({ recipe_id: String(recipeId) }).eq('id', existing.id);
+    if (error) console.error('[GieesK] Could not update meal plan slot:', error);
+  } else {
+    const { error } = await sb.from('meal_plan_items').insert({
+      plan_id: currentPlanId,
+      recipe_id: String(recipeId),
+      day_of_week: Number(dow),
+      meal_type: mealType,
+      servings: 1
+    });
+    if (error) console.error('[GieesK] Could not save meal plan slot:', error);
+  }
 
   closePicker();
-  renderPlanner();
+  await renderPlanner();
 }
 
 async function removeFromPlanner(key) {
   const sb = getSupabase();
   if (!sb || !currentUser) return;
-  const [plan_date, meal_slot] = [key.slice(0, 10), key.slice(11)];
-  await sb.from('meal_plans').delete()
-    .eq('user_id', currentUser.id).eq('plan_date', plan_date).eq('meal_slot', meal_slot);
-  renderPlanner();
+  const [dow, mealType] = key.split('-');
+  const existing = planItemsCache.find(i => String(i.day_of_week) === dow && i.meal_type === mealType);
+  if (!existing) return;
+  await sb.from('meal_plan_items').delete().eq('id', existing.id);
+  await renderPlanner();
 }
 
 // Called directly by the recipe modal's "Add to Meal Plan" button.
-// Previously this button only called openDashboard('planner') — it
-// navigated to the planner but never actually added the recipe
-// anywhere, matching exactly what was reported as broken.
 function addCurrentRecipeToMealPlan() {
   const recipe = window._currentModalRecipe;
   if (!recipe) return;
@@ -644,6 +689,7 @@ function addCurrentRecipeToMealPlan() {
   if (typeof closeRecipeModal === 'function') closeRecipeModal();
   openDashboard('planner');
 }
+
 
 // ══════════════════════════════════════════
 // SHOPPING LIST PANEL — backed by Supabase (shopping_list_items table)
@@ -698,10 +744,9 @@ async function fetchShoppingItems() {
     .from('shopping_list_items')
     .select('*')
     .eq('user_id', currentUser.id)
-    .order('category', { ascending: true })
     .order('created_at', { ascending: true });
   if (error) {
-    console.error('[GieesK] shopping_list_items query failed — does the table match supabase/shopping_list_items.sql?', error);
+    console.error('[GieesK] shopping_list_items query failed:', error);
     return null; // null = real error, distinct from [] = genuinely empty
   }
   return data || [];
@@ -723,42 +768,55 @@ async function renderShoppingList() {
   if (items.length === 0) {
     container.innerHTML = `<div class="saved-empty" style="grid-column:1/-1">
       <i class="ti ti-shopping-cart"></i><h3>Your shopping list is empty</h3>
-      <p>Add items above, or tap "Shopping List" on any recipe to add its ingredients.</p></div>`;
+      <p>Add items above, or tap "Add to Shopping List" on any recipe to add its ingredients.</p></div>`;
     updateShoppingProgress(items);
     return;
   }
 
-  const cats = {};
+  // The real table has no category column — group by what's actually
+  // knowable instead: whether an item came from a recipe or was typed
+  // in by hand. Recipe title is looked up client-side from RECIPES
+  // (via recipe_id) rather than duplicated into the database row.
+  const fromRecipes = {};
+  const other = [];
   items.forEach(item => {
-    const cat = item.category || 'Other';
-    if (!cats[cat]) cats[cat] = [];
-    cats[cat].push(item);
+    if (item.recipe_id) {
+      const recipe = RECIPES.find(r => String(r.id) === String(item.recipe_id));
+      const label = recipe ? recipe.title : 'From a recipe';
+      if (!fromRecipes[label]) fromRecipes[label] = [];
+      fromRecipes[label].push(item);
+    } else {
+      other.push(item);
+    }
   });
 
-  const catIcons = {
-    'Vegetables': '🥦', 'Grains & Staples': '🌾', 'Meat & Fish': '🥩',
-    'Herbs & Spices': '🌿', 'Dairy': '🥛', 'Fruits': '🍎', 'Other': '🛒'
-  };
-
-  container.innerHTML = Object.entries(cats).map(([cat, catItems]) => `
-    <div class="shopping-category">
-      <div class="shopping-category-title">
-        ${catIcons[cat] || '🛒'} ${cat}
+  const itemRow = item => `
+    <div class="shopping-item ${item.checked ? 'checked' : ''}" id="sitem-${item.id}">
+      <div class="shopping-checkbox" onclick="toggleShoppingItem('${item.id}')">
+        ${item.checked ? '<i class="ti ti-check"></i>' : ''}
       </div>
-      ${catItems.map(item => `
-        <div class="shopping-item ${item.checked ? 'checked' : ''}" id="sitem-${item.id}">
-          <div class="shopping-checkbox" onclick="toggleShoppingItem('${item.id}')">
-            ${item.checked ? '<i class="ti ti-check"></i>' : ''}
-          </div>
-          <span class="shopping-item-name">${item.name}</span>
-          ${item.recipe_title ? `<span style="font-size:11px;color:var(--text-hint);background:var(--bg-elevated);padding:2px 8px;border-radius:var(--r-full)">${item.recipe_title}</span>` : ''}
-          <span class="shopping-item-amount">${item.amount || ''}</span>
-          <div class="shopping-item-delete" onclick="deleteShoppingItem('${item.id}')">
-            <i class="ti ti-trash"></i>
-          </div>
-        </div>`).join('')}
+      <span class="shopping-item-name">${item.ingredient}</span>
+      <span class="shopping-item-amount">${item.amount || ''}</span>
+      <div class="shopping-item-delete" onclick="deleteShoppingItem('${item.id}')">
+        <i class="ti ti-trash"></i>
+      </div>
+    </div>`;
+
+  let html = Object.entries(fromRecipes).map(([label, catItems]) => `
+    <div class="shopping-category">
+      <div class="shopping-category-title">🍽 ${label}</div>
+      ${catItems.map(itemRow).join('')}
     </div>`).join('');
 
+  if (other.length) {
+    html += `
+    <div class="shopping-category">
+      <div class="shopping-category-title">🛒 Added by you</div>
+      ${other.map(itemRow).join('')}
+    </div>`;
+  }
+
+  container.innerHTML = html;
   updateShoppingProgress(items);
 }
 
@@ -783,16 +841,15 @@ async function deleteShoppingItem(id) {
 async function addShoppingItem() {
   const nameEl   = document.getElementById('shoppingNewItem');
   const amountEl = document.getElementById('shoppingNewAmount');
-  const name = nameEl?.value.trim();
-  if (!name) return;
+  const ingredient = nameEl?.value.trim();
+  if (!ingredient) return;
   const sb = getSupabase();
   if (!sb || !currentUser) { openAuthModal('login'); return; }
 
   await sb.from('shopping_list_items').insert({
     user_id: currentUser.id,
-    name,
+    ingredient,
     amount: amountEl?.value.trim() || '',
-    category: 'Other',
     checked: false
   });
   if (nameEl)   nameEl.value   = '';
@@ -853,11 +910,9 @@ async function addRecipeToShoppingList(recipe) {
 
   const rows = ingredients.map(line => ({
     user_id: currentUser.id,
-    name: line,
+    ingredient: line,
     amount: '',
-    category: 'Other',
     recipe_id: String(recipe.id),
-    recipe_title: recipe.title,
     checked: false
   }));
 
