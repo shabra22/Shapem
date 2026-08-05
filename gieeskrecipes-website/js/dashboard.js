@@ -591,7 +591,16 @@ async function fetchPlanItems(planId) {
   return data || [];
 }
 
+let plannerRenderToken = 0;
+
+// Each call gets its own token; if a NEWER renderPlanner() call starts
+// before this one finishes its Supabase round-trips (e.g. the user
+// clicked the arrow twice quickly), this older one abandons itself
+// instead of overwriting the grid with stale data after the newer
+// one already finished — without this, rapid clicking could leave
+// the display showing a week that doesn't match where you clicked to.
 async function renderPlanner() {
+  const myToken = ++plannerRenderToken;
   const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const meals = ['breakfast','lunch','dinner','snack'];
   const mealLabels = { breakfast:'Breakfast', lunch:'Lunch', dinner:'Dinner', snack:'Snack' };
@@ -599,20 +608,17 @@ async function renderPlanner() {
   const weekStart = weekStartFor(plannerWeekOffset);
 
   const label = document.getElementById('plannerWeekLabel');
-  if (label) {
-    const end = new Date(weekStart); end.setDate(weekStart.getDate() + 6);
-    label.textContent = `${weekStart.toLocaleDateString('en',{month:'short',day:'numeric'})} – ${end.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'})}`;
-  }
-
   const grid = document.getElementById('plannerGrid');
   if (!grid) return;
 
   currentPlanId = await getOrCreateWeekPlan(weekStart);
+  if (myToken !== plannerRenderToken) return;   // a newer click superseded this render — abandon
   if (!currentPlanId) {
     grid.innerHTML = `<div class="saved-empty" style="grid-column:1/-1"><i class="ti ti-alert-triangle"></i><h3>Couldn't load your meal plan</h3><p>Please try again in a moment.</p></div>`;
     return;
   }
   planItemsCache = await fetchPlanItems(currentPlanId);
+  if (myToken !== plannerRenderToken) return;   // check again after the second round-trip
   if (planItemsCache === null) {
     grid.innerHTML = `<div class="saved-empty" style="grid-column:1/-1"><i class="ti ti-alert-triangle"></i><h3>Couldn't load your meal plan</h3><p>Please try again in a moment.</p></div>`;
     return;
@@ -628,6 +634,7 @@ async function renderPlanner() {
     html += `<div class="planner-cell header">
       <div class="planner-day-name">${day}</div>
       <div class="planner-day-date ${isToday ? 'today' : ''}">${date.getDate()}</div>
+      ${isToday ? '<div class="planner-today-label">Today</div>' : ''}
     </div>`;
   });
 
@@ -656,6 +663,12 @@ async function renderPlanner() {
     });
   });
 
+  if (myToken !== plannerRenderToken) return;   // one more guard right before painting the DOM
+
+  if (label) {
+    const end = new Date(weekStart); end.setDate(weekStart.getDate() + 6);
+    label.textContent = `${weekStart.toLocaleDateString('en',{month:'short',day:'numeric'})} – ${end.toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'})}`;
+  }
   grid.innerHTML = html;
 
   const statEl = document.getElementById('statPlanned');

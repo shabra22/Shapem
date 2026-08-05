@@ -400,6 +400,18 @@
   margin-top: 2px;
 }
 .planner-day-date.today { color: var(--gold); }
+.planner-today-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--gold);
+  background: rgba(201,150,58,0.15);
+  border-radius: var(--r-full);
+  padding: 1px 7px;
+  margin-top: 3px;
+  display: inline-block;
+}
 .planner-meal-label {
   font-size: 10px;
   font-weight: 700;
