@@ -5,6 +5,42 @@
 // ── Single source of truth for page routing ──
 const PAGES = ['page-home', 'page-recipes', 'page-dashboard', 'page-community', 'page-chef-profile', 'page-about', 'page-privacy', 'page-terms'];
 
+// Single source of truth for nav highlighting — every navigation path
+// (page switches, homepage-section clicks, scroll-spy) should go
+// through this rather than setting a.style.color inline in multiple
+// places, which is how Cuisines/AI Chef/Chefs ended up never updating
+// the active nav link at all.
+function setActiveNav(page) {
+  document.querySelectorAll('.nav-link, .nav-mobile a').forEach(function(a) {
+    a.style.color = a.dataset.page === page ? 'var(--gold)' : '';
+  });
+}
+
+// Keeps the nav accurate while someone scrolls through the homepage
+// naturally, not just when they click a nav link — otherwise scrolling
+// from Cuisines into AI Chef by hand would leave Cuisines highlighted
+// indefinitely, same underlying problem as the click-only case.
+function initNavScrollSpy() {
+  var sectionToPage = { home: 'home', cuisines: 'cuisines', 'ai-finder': 'ai-chef', chefs: 'chefs' };
+  var sections = Object.keys(sectionToPage)
+    .map(function(id) { return document.getElementById(id); })
+    .filter(Boolean);
+  if (!sections.length || typeof IntersectionObserver === 'undefined') return;
+
+  var observer = new IntersectionObserver(function(entries) {
+    // Only relevant while the actual home page is on screen — a user
+    // on Recipes/Community/About isn't looking at these sections at
+    // all, even if they're technically still in the DOM.
+    var homeEl = document.getElementById('page-home');
+    if (!homeEl || homeEl.style.display === 'none') return;
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) setActiveNav(sectionToPage[entry.target.id]);
+    });
+  }, { rootMargin: '-40% 0px -55% 0px', threshold: 0 });
+
+  sections.forEach(function(s) { observer.observe(s); });
+}
+
 function showLegal(type) {
   PAGES.forEach(function(id) {
     var el = document.getElementById(id);
@@ -32,9 +68,7 @@ function openAbout() {
   var about = document.getElementById('page-about');
   if (about) about.style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  document.querySelectorAll('.nav-link').forEach(function(a) {
-    a.style.color = a.dataset.page === 'about' ? 'var(--gold)' : '';
-  });
+  setActiveNav('about');
 }
 
 function showPage(page) {
@@ -58,12 +92,7 @@ function showPage(page) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   // Highlight active nav link
-  document.querySelectorAll('.nav-link').forEach(a => {
-    const isActive = (a.dataset.page === page) ||
-                     (page === 'community' && a.dataset.page === 'community') ||
-                     (page === 'recipes'   && a.getAttribute('href') === '#recipes');
-    a.style.color = isActive ? 'var(--gold)' : '';
-  });
+  setActiveNav(page);
 
   // Build pages on first visit
   if (page === 'recipes')   buildRecipesPage();
@@ -151,6 +180,8 @@ function buildRecipesPage() {
 // ── Boot ─────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
 
+  initNavScrollSpy();
+
   // Expose globals
   window.starsHTML        = starsHTML;
   window.openRecipeModal  = openRecipeModal;
@@ -237,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
       } else if (page === 'community' || href.includes('community')) {
         e.preventDefault();
         if (typeof openCommunity === 'function') openCommunity();
-      } else if (page === 'home') {
+      } else if (page === 'home' || page === 'cuisines' || page === 'ai-chef' || page === 'chefs') {
         e.preventDefault();
         // Show home page
         PAGES.forEach(function(id) {
@@ -260,6 +291,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+
+        // Was previously missing entirely for this branch — clicking
+        // Cuisines/AI Chef/Chefs never updated which nav link showed as
+        // active, so whatever page you'd last explicitly navigated to
+        // (e.g. Recipes) stayed highlighted gold indefinitely, even
+        // after scrolling to a completely different section.
+        setActiveNav(page);
       }
     });
   });
