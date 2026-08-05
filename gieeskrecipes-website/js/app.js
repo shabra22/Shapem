@@ -153,7 +153,20 @@ function buildRecipesPage() {
     tabsWrap.appendChild(pill);
   });
 
-  // Country sections
+  // Country sections — headers/pills build instantly (cheap), but the
+  // actual recipe cards (974 of them, each involving DOM creation, an
+  // innerHTML parse, and two addEventListener calls) used to all get
+  // built and appended in one single synchronous loop. On a fast
+  // desktop that's a blocking task easily in the hundreds of
+  // milliseconds; on mobile hardware it's substantially worse — the
+  // whole tab visibly freezes the moment you open it. Rendering in
+  // small batches across multiple animation frames keeps each single
+  // task short enough that the browser stays responsive throughout,
+  // and the grid visibly fills in almost immediately instead of
+  // appearing all at once after a long pause.
+  const CARD_BATCH_SIZE = 40;
+  const allWork = [];   // flat list of {grid, recipe, index} across every country, in display order
+
   countries.forEach(country => {
     const d = byCountry[country];
     const section = document.createElement('div');
@@ -173,8 +186,21 @@ function buildRecipesPage() {
     container.appendChild(section);
 
     const grid = document.getElementById(`grid-${country.replace(/\s/g,'-')}`);
-    d.recipes.forEach((r, i) => grid.appendChild(createRecipeCard(r, i * 60)));
+    d.recipes.forEach((r, i) => allWork.push({ grid, recipe: r, index: i }));
   });
+
+  let cursor = 0;
+  function renderNextBatch() {
+    const end = Math.min(cursor + CARD_BATCH_SIZE, allWork.length);
+    for (; cursor < end; cursor++) {
+      const { grid, recipe, index } = allWork[cursor];
+      grid.appendChild(createRecipeCard(recipe, (index % CARD_BATCH_SIZE) * 15));
+    }
+    if (cursor < allWork.length) {
+      requestAnimationFrame(renderNextBatch);
+    }
+  }
+  requestAnimationFrame(renderNextBatch);
 }
 
 // ── Boot ─────────────────────────────────

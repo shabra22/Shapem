@@ -284,13 +284,8 @@
 }
 
 @media (max-width: 600px) {
-  .recipe-grid { grid-template-columns: 1fr 1fr; }
   .cuisine-grid { grid-template-columns: repeat(3, 1fr); }
 }
-@media (max-width: 400px) {
-  .recipe-grid { grid-template-columns: 1fr; }
-}
-
 
 /* ── Cards mobile fixes ─────────────────── */
 @media (max-width: 640px) {

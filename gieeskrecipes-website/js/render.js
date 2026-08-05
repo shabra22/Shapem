@@ -76,13 +76,24 @@ function createRecipeCard(recipe, delay) {
     }
   });
 
-  card.querySelector('.recipe-save-btn').addEventListener('click', function(e) {
+  card.querySelector('.recipe-save-btn').addEventListener('click', async function(e) {
     e.preventDefault();
     e.stopPropagation();
     var btn = e.currentTarget;
-    btn.classList.toggle('saved');
-    btn.querySelector('i').className = btn.classList.contains('saved') ? 'ti ti-bookmark-filled' : 'ti ti-bookmark';
-    saveRecipe && saveRecipe(recipe.id);
+    var currentlySaved = btn.classList.contains('saved');
+    btn.disabled = true;
+
+    var ok = currentlySaved
+      ? (typeof unsaveRecipe === 'function' && await unsaveRecipe(recipe.id))
+      : (typeof saveRecipe === 'function' && await saveRecipe(recipe.id));
+
+    btn.disabled = false;
+    if (ok) {
+      btn.classList.toggle('saved', !currentlySaved);
+      btn.querySelector('i').className = !currentlySaved ? 'ti ti-bookmark-filled' : 'ti ti-bookmark';
+    } else {
+      console.error('[GieesK] Could not ' + (currentlySaved ? 'unsave' : 'save') + ' recipe from card.');
+    }
   });
 
   return card;

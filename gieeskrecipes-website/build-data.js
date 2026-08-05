@@ -193,6 +193,41 @@ Object.entries(statTargets).forEach(([label, value]) => {
 fs.writeFileSync(indexHtmlPath, indexHtml);
 console.log(`✅ Homepage hero stats synced (${statsUpdated}/3): ${RECIPES.length} recipes, ${realCountryCount} countries, ${realChefCount} chefs`);
 
+// The animated counter stats above are a separate piece of markup from
+// the hero tagline text and the SEO-facing JSON-LD description — both
+// had their OWN independent hardcoded "50,000+ recipes" / "195
+// countries" that the counter fix never touched, discovered by actually
+// screenshotting the rendered homepage rather than just checking the
+// counters. Fix those here too, same reasoning: never hand-typed again.
+indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+const before1 = indexHtml;
+
+indexHtml = indexHtml.replace(
+  /Explore [\d,]+\+? recipes from every corner of the globe/,
+  `Explore ${RECIPES.length}+ recipes from every corner of the globe`
+);
+indexHtml = indexHtml.replace(
+  /\d+ countries, [\d,]+\+? authentic recipes/,
+  `${realCountryCount} countries, ${RECIPES.length}+ authentic recipes`
+);
+indexHtml = indexHtml.replace(
+  /[\d,]+\+ authentic recipes from every corner of the globe/g,
+  `${RECIPES.length}+ authentic recipes from every corner of the globe`
+);
+
+const alreadyCorrect =
+  indexHtml.includes(`Explore ${RECIPES.length}+ recipes from every corner of the globe`) &&
+  indexHtml.includes(`${realCountryCount} countries, ${RECIPES.length}+ authentic recipes`);
+
+if (indexHtml !== before1) {
+  fs.writeFileSync(indexHtmlPath, indexHtml);
+  console.log(`✅ Hero tagline, JSON-LD, and social meta descriptions synced to ${RECIPES.length} recipes, ${realCountryCount} countries`);
+} else if (alreadyCorrect) {
+  console.log(`✅ Hero tagline, JSON-LD, and social meta descriptions already up to date (${RECIPES.length} recipes, ${realCountryCount} countries)`);
+} else {
+  console.warn('⚠  Could not find hero tagline / JSON-LD / social meta text to sync — check for wording changes');
+}
+
 // ── Report ──────────────────────────────────────────────────────
 const zlib = require('zlib');
 const gz = s => zlib.gzipSync(Buffer.from(s)).length;

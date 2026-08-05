@@ -172,6 +172,14 @@ async function saveRecipe(recipeId) {
   return !error;
 }
 
+async function unsaveRecipe(recipeId) {
+  if (!currentUser) { openAuthModal('login'); return false; }
+  const sb = getSupabase();
+  const { error } = await sb.from('saved_recipes')
+    .delete().eq('user_id', currentUser.id).eq('recipe_id', String(recipeId));
+  return !error;
+}
+
 // ── Get saved recipes for current user ───
 async function getSavedRecipes() {
   if (!currentUser) return [];

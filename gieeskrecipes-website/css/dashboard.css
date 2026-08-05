@@ -576,6 +576,7 @@
   display: flex;
   gap: 10px;
   margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 }
 .shopping-add-input {
   flex: 1;
@@ -693,9 +694,20 @@
   .form-row     { grid-template-columns: 1fr; }
 }
 @media (max-width: 700px) {
-  .planner-grid { grid-template-columns: 60px repeat(7, 1fr); font-size: 11px; }
+  .planner-grid { grid-template-columns: 60px repeat(7, minmax(84px, 1fr)); font-size: 11px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .planner-cell { padding: 6px 4px; min-height: 60px; }
   .planner-slot { min-height: 50px; }
+  /* The label column (day names on the header row, meal names on each
+     row below) stays pinned while the 7 day columns scroll underneath
+     it — without this, scrolling to see Saturday loses all context for
+     which meal row you're even looking at. */
+  .planner-cell:first-child,
+  .planner-cell:nth-child(8n+1) {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--bg-elevated);
+  }
 }
 @media (max-width: 520px) {
   .dash-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
