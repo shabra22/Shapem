@@ -9,11 +9,13 @@
 
 // ── Open community page ───────────────────
 function openCommunity() {
-  // Hide all other pages
-  ['page-home', 'page-recipes', 'page-dashboard', 'page-chef-profile'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
-  });
+  // Was its own separate, incomplete hide-list (missing page-about,
+  // page-privacy, page-terms) that also never touched nav highlighting
+  // at all — confirmed via video: clicking Community correctly showed
+  // the right content, but whatever nav link was active before (Recipes,
+  // About, etc.) just stayed gold indefinitely, since nothing here ever
+  // called setActiveNav().
+  hideAllPages();
 
   // Build community page if first visit
   let page = document.getElementById('page-community');
@@ -23,6 +25,8 @@ function openCommunity() {
   }
   page.style.display = 'block';
 
+  if (typeof setActiveNav === 'function') setActiveNav('community');
+
   // Fetch fresh feed every time the page opens — was gated to build once
   // per session, meaning new posts/likes from elsewhere never showed up.
   setTimeout(() => { buildFeed(); loadSidebarChallenges(); loadCommunityMemberCount(); }, 50);
@@ -31,7 +35,10 @@ function openCommunity() {
 }
 
 function hideAllPages() {
-  ['page-home', 'page-recipes', 'page-dashboard', 'page-community', 'page-chef-profile'].forEach(id => {
+  // Was its own separate, incomplete list (missing page-about, page-privacy,
+  // page-terms) — now uses the same authoritative PAGES list as showPage(),
+  // so there's exactly one place that knows what "every page" means.
+  PAGES.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
@@ -49,7 +56,7 @@ function buildCommunityPage() {
       <div class="container">
         <p class="section-eyebrow" style="justify-content:center;display:flex">🌍 Global Cooking Community</p>
         <h1 class="community-hero-title">Cook. Share.<br/><em>Inspire the World.</em></h1>
-        <p class="community-hero-sub">Join 1.2 million cooks from 195 countries. Share your recipes, enter challenges, follow master chefs, and earn your place on the leaderboard.</p>
+        <p class="community-hero-sub">Join our growing community of cooks from ${new Set(RECIPES.map(r => r.country).filter(Boolean)).size} countries. Share your recipes, enter challenges, follow master chefs, and earn your place on the leaderboard.</p>
         <div class="community-hero-actions">
           <button class="btn-gold btn-lg" onclick="openUploadModal()">
             <i class="ti ti-plus"></i> Share a Recipe
@@ -774,6 +781,7 @@ function openChefProfile(index) {
   const chef = CHEFS[index];
   if (!chef) return;
   hideAllPages();
+  if (typeof setActiveNav === 'function') setActiveNav('community');
 
   let page = document.getElementById('page-chef-profile');
   if (!page) { page = document.createElement('div'); page.id = 'page-chef-profile'; document.body.insertBefore(page, document.querySelector('footer')); }

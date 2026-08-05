@@ -7,11 +7,17 @@ function openDashboard(tab) {
   tab = tab || 'profile';
   if (!currentUser) { openAuthModal('login'); return; }
 
-  // Hide every other page
-  ['page-home','page-recipes','page-community','page-chef-profile'].forEach(function(id) {
+  // Hide every other page — was its own separate incomplete list
+  // (missing page-about, page-privacy, page-terms), same bug pattern
+  // found in openCommunity() and closeDashboard().
+  PAGES.forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
+
+  // No top-nav link represents "being in your dashboard" — clear
+  // whatever was previously highlighted rather than leave it stuck.
+  if (typeof setActiveNav === 'function') setActiveNav('dashboard');
 
   var dash = document.getElementById('page-dashboard');
   if (!dash) {
@@ -26,12 +32,15 @@ function openDashboard(tab) {
 function closeDashboard() {
   const dash = document.getElementById('page-dashboard');
   if (dash) dash.style.display = 'none';
-  // Show home page
-  ['page-recipes', 'page-community', 'page-chef-profile'].forEach(id => {
+  // Show home page — was its own separate incomplete list (missing
+  // page-about, page-privacy, page-terms) and never updated nav
+  // highlighting, same bug as openCommunity() had.
+  PAGES.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
   document.getElementById('page-home').style.display = '';
+  if (typeof setActiveNav === 'function') setActiveNav('home');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
