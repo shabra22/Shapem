@@ -1,5 +1,0 @@
-[33m7b15238[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m)[m Align community and chef_follows table IDs with existing bigserial convention
-[33ma8cb684[m Fix shopping list and meal planner to match actual live database schema
-[33m132b355[m Fix Add Recipes/Add to Meal Plan buttons, rebuild meal planner on real persistence, remove all fake community/chef social proof, shrink footer logo
-[33m0140031[m Add 20 more Italian pasta recipes (ITA021-040: classics, baked pasta, stuffed pasta, seafood)
-[33m807b8f5[m Unify section backgrounds across Cuisines, AI Chef, Seasonal, and Community page

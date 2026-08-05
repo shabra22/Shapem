@@ -544,7 +544,7 @@ function renderPendingBanner() {
   if (!pendingMealPlanRecipe) { el.innerHTML = ''; return; }
   el.innerHTML = `
     <div style="background:rgba(201,150,58,0.12);border:1px solid var(--border-gold);border-radius:var(--r-md);padding:10px 14px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:10px">
-      <span style="font-size:13px;color:var(--text-primary)">${pendingMealPlanRecipe.emoji} Tap a slot below to add <strong>${pendingMealPlanRecipe.title}</strong></span>
+      <span style="font-size:13px;color:var(--text-primary)">${pendingMealPlanRecipe.emoji} Tap any highlighted <strong>+</strong> box below (breakfast/lunch/dinner/snack) to add <strong>${pendingMealPlanRecipe.title}</strong> to that day</span>
       <button class="btn-ghost" style="font-size:12px;padding:4px 10px" onclick="pendingMealPlanRecipe=null;renderPendingBanner()">Cancel</button>
     </div>`;
 }
@@ -631,10 +631,13 @@ async function renderPlanner() {
   days.forEach((day, i) => {
     const date = new Date(weekStart); date.setDate(weekStart.getDate() + i);
     const isToday = date.toDateString() === today.toDateString();
-    html += `<div class="planner-cell header">
+    const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+    const isTomorrow = date.toDateString() === tomorrow.toDateString();
+    html += `<div class="planner-cell header" style="cursor:default">
       <div class="planner-day-name">${day}</div>
       <div class="planner-day-date ${isToday ? 'today' : ''}">${date.getDate()}</div>
       ${isToday ? '<div class="planner-today-label">Today</div>' : ''}
+      ${isTomorrow ? '<div class="planner-today-label planner-tomorrow-label">Tomorrow</div>' : ''}
     </div>`;
   });
 
@@ -656,7 +659,7 @@ async function renderPlanner() {
           <div class="planner-slot-remove" onclick="event.stopPropagation();removeFromPlanner('${key}')"><i class="ti ti-x"></i></div>
         </div></div>`;
       } else {
-        html += `<div class="planner-cell"><div class="planner-slot" onclick="openPicker('${key}')">
+        html += `<div class="planner-cell"><div class="planner-slot${pendingMealPlanRecipe ? ' pending-target' : ''}" onclick="openPicker('${key}')">
           <span class="planner-slot-add">+</span>
         </div></div>`;
       }

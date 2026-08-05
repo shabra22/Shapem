@@ -412,6 +412,19 @@
   margin-top: 3px;
   display: inline-block;
 }
+.planner-tomorrow-label {
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+}
+.planner-slot.pending-target {
+  border-color: var(--border-gold);
+  background: rgba(201,150,58,0.10);
+  animation: pending-pulse 1.4s ease-in-out infinite;
+}
+@keyframes pending-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201,150,58,0.25); }
+  50%      { box-shadow: 0 0 0 5px rgba(201,150,58,0); }
+}
 .planner-meal-label {
   font-size: 10px;
   font-weight: 700;
