@@ -52440,19 +52440,19 @@ RECIPES.forEach(r => {
 });
 
 const CUISINES = [
-  { name:'Italian',       flag:'🇮🇹', count:65,   color:'#8B1A1A' },
-  { name:'Japanese',      flag:'🇯🇵', count:2810, color:'#BC002D' },
-  { name:'Mexican',       flag:'🇲🇽', count:2190, color:'#006847' },
-  { name:'Indian',        flag:'🇮🇳', count:3650, color:'#FF9933' },
-  { name:'Thai',          flag:'🇹🇭', count:1840, color:'#00247D' },
-  { name:'Moroccan',      flag:'🇲🇦', count:980,  color:'#C1272D' },
-  { name:'French',        flag:'🇫🇷', count:2450, color:'#002395' },
-  { name:'Lebanese',      flag:'🇱🇧', count:1120, color:'#00A651' },
-  { name:'Chinese',       flag:'🇨🇳', count:4100, color:'#DE2910' },
-  { name:'Greek',         flag:'🇬🇷', count:1360, color:'#0D5EAF' },
+  { name:'Italian',       flag:'🇮🇹', count:66,   color:'#8B1A1A' },
+  { name:'Japanese',      flag:'🇯🇵', count:1, color:'#BC002D' },
+  { name:'Mexican',       flag:'🇲🇽', count:1, color:'#006847' },
+  { name:'Indian',        flag:'🇮🇳', count:1, color:'#FF9933' },
+  { name:'Thai',          flag:'🇹🇭', count:1, color:'#00247D' },
+  { name:'Moroccan',      flag:'🇲🇦', count:1,  color:'#C1272D' },
+  { name:'French',        flag:'🇫🇷', count:0, color:'#002395' },
+  { name:'Lebanese',      flag:'🇱🇧', count:0, color:'#00A651' },
+  { name:'Chinese',       flag:'🇨🇳', count:0, color:'#DE2910' },
+  { name:'Greek',         flag:'🇬🇷', count:0, color:'#0D5EAF' },
   { name:'Ethiopian',     flag:'🇪🇹', count:300,  color:'#FCDD09' },
-  { name:'Peruvian',      flag:'🇵🇪', count:810,  color:'#D91023' },
-  { name:'Kenyan',        flag:'🇰🇪', count:300,    color:'#006600' },
+  { name:'Peruvian',      flag:'🇵🇪', count:0,  color:'#D91023' },
+  { name:'Kenyan',        flag:'🇰🇪', count:301,    color:'#006600' },
   { name:'Tanzanian',     flag:'🇹🇿', count:300,    color:'#1EB53A' },
 ];
 

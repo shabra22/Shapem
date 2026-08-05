@@ -228,7 +228,49 @@ if (indexHtml !== before1) {
   console.warn('⚠  Could not find hero tagline / JSON-LD / social meta text to sync — check for wording changes');
 }
 
-// ── Report ──────────────────────────────────────────────────────
+// ── Keep World Cuisines counts honest ────────────────────────────
+// Found via an actual mobile screen recording: cards showing "Indian
+// 3.6k recipes" (real: 1), "Chinese 4.1k recipes" (real: 0 — China
+// isn't even one of the countries with real recipes), etc. Only
+// Ethiopian/Kenyan/Tanzanian happened to be correct, and even
+// "Italian: 65" had already drifted one recipe stale from manual
+// updates across sessions. Computing this at build time, same as the
+// hero stats, means it can't go stale again regardless of how many
+// recipes get added later.
+const dataJsPath = path.join(__dirname, 'js', 'data.js');
+let dataJsSrc = fs.readFileSync(dataJsPath, 'utf8');
+
+const countByCountry = {};
+RECIPES.forEach(r => { if (r.country) countByCountry[r.country] = (countByCountry[r.country] || 0) + 1; });
+
+// Maps each CUISINES card's display name to the real `country` field
+// used on RECIPES — several of these (French, Lebanese, Chinese,
+// Greek, Peruvian) currently have zero matching recipes at all, and
+// will correctly show 0 rather than a fabricated number until real
+// recipes for those countries actually exist.
+const cuisineToCountry = {
+  Italian: 'Italy', Japanese: 'Japan', Mexican: 'Mexico', Indian: 'India',
+  Thai: 'Thailand', Moroccan: 'Morocco', French: 'France', Lebanese: 'Lebanon',
+  Chinese: 'China', Greek: 'Greece', Ethiopian: 'Ethiopia', Peruvian: 'Peru',
+  Kenyan: 'Kenya', Tanzanian: 'Tanzania',
+};
+
+let cuisinesUpdated = 0;
+Object.entries(cuisineToCountry).forEach(([cuisineName, countryName]) => {
+  const realCount = countByCountry[countryName] || 0;
+  const re = new RegExp(`(\\{\\s*name:\\s*'${cuisineName}'[^}]*count:\\s*)\\d+`);
+  if (re.test(dataJsSrc)) {
+    dataJsSrc = dataJsSrc.replace(re, `$1${realCount}`);
+    cuisinesUpdated++;
+  } else {
+    console.warn(`⚠  Could not find CUISINES entry for "${cuisineName}" — skipped`);
+  }
+});
+
+fs.writeFileSync(dataJsPath, dataJsSrc);
+console.log(`✅ CUISINES counts synced (${cuisinesUpdated}/${Object.keys(cuisineToCountry).length}): ` +
+  Object.entries(cuisineToCountry).map(([n,c]) => `${n}=${countByCountry[c]||0}`).join(', '));
+
 const zlib = require('zlib');
 const gz = s => zlib.gzipSync(Buffer.from(s)).length;
 const mb = b => (b/1048576).toFixed(2);

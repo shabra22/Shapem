@@ -65,6 +65,7 @@
   border-top: none; border-left: none; border-right: none;
   font-family: inherit;
   display: flex; align-items: center; gap: 6px;
+  flex-shrink: 0;
 }
 .community-tab:hover { color: var(--text-primary); }
 .community-tab.active { color: var(--emerald); border-bottom-color: var(--emerald); }
