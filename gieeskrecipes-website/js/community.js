@@ -29,7 +29,7 @@ function openCommunity() {
 
   // Fetch fresh feed every time the page opens — was gated to build once
   // per session, meaning new posts/likes from elsewhere never showed up.
-  setTimeout(() => { buildFeed(); loadSidebarChallenges(); loadCommunityMemberCount(); }, 50);
+  setTimeout(() => { buildFeed(); loadSidebarChallenges(); loadCommunityMemberCount(); loadSidebarTopChefsFollowers(); }, 50);
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -123,12 +123,21 @@ function buildCommunityPage() {
           <!-- Top chefs -->
           <div class="sidebar-widget">
             <div class="sidebar-widget-header"><i class="ti ti-star"></i> Top Chefs This Week</div>
-            <div class="sidebar-widget-body">
-              ${CHEFS.slice(0,5).map((c, i) => `
-                <div class="top-chef-row" onclick="openChefProfile(${i})">
+            <div class="sidebar-widget-body" id="sidebarTopChefs">
+              ${CHEFS
+                // Was just the first 5 in array order under a "Top" label
+                // implying ranking — sort by real recipe count so the
+                // label actually means something, since follower counts
+                // (shown below) are all genuinely 0 at this stage and
+                // can't yet distinguish anyone.
+                .map((c, originalIndex) => ({ c, originalIndex, recipeCount: getChefRecipeCount(c.name) }))
+                .sort((a, b) => b.recipeCount - a.recipeCount)
+                .slice(0, 5)
+                .map(({ c, originalIndex, recipeCount }) => `
+                <div class="top-chef-row" onclick="openChefProfile(${originalIndex})">
                   <div class="top-chef-avatar">${c.emoji}</div>
                   <div class="top-chef-name">${c.name}</div>
-                  <div class="top-chef-score">${formatNum(c.followers)}</div>
+                  <div class="top-chef-score" data-follower-count="${c.name.replace(/"/g,'&quot;')}">–</div>
                 </div>`).join('')}
               <button class="btn-ghost" style="width:100%;justify-content:center;margin-top:8px;font-size:13px" onclick="switchCommunityTab('chefs')">
                 All chefs <i class="ti ti-arrow-right"></i>
@@ -477,6 +486,23 @@ async function loadCommunityMemberCount() {
     return;
   }
   el.textContent = formatNum(count);
+}
+
+// Top Chefs sidebar widget — was showing the static fake chef.followers
+// field (numbers like 48.2k that don't correspond to anything real),
+// missed when the same fix was applied to the homepage Chefs section,
+// the Community Chefs tab, and individual chef profile pages. Same
+// real async lookup as those three, just wired to this fourth spot.
+async function loadSidebarTopChefsFollowers() {
+  const widget = document.getElementById('sidebarTopChefs');
+  if (!widget) return;
+  const names = [...widget.querySelectorAll('[data-follower-count]')].map(el => el.dataset.followerCount);
+  if (!names.length) return;
+  const counts = await getChefFollowerCounts(names);
+  Object.keys(counts).forEach(name => {
+    const el = widget.querySelector(`[data-follower-count="${name.replace(/"/g,'\\"')}"]`);
+    if (el) el.textContent = formatNum(counts[name]);
+  });
 }
 
 // Sidebar preview — same challenges table as the main tab, just the

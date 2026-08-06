@@ -130,7 +130,7 @@ function renderCuisines() {
       '<div class="cuisine-card-overlay">' +
         '<div class="cuisine-flag">' + c.flag + '</div>' +
         '<div class="cuisine-name">' + c.name + '</div>' +
-        '<div class="cuisine-count">' + formatNum(c.count) + ' recipes</div>' +
+        '<div class="cuisine-count">' + formatNum(c.count) + ' recipe' + (c.count === 1 ? '' : 's') + '</div>' +
       '</div>';
     card.addEventListener('click', function() {
       var inp = document.getElementById('searchInput');
